@@ -1,5 +1,6 @@
-#include <utility>
+//Following https://anteru.net/2012/11/03/2009/
 
+#include <utility>
 #include <CL\cl.hpp>
 #include <vector>
 #include <cstdio>
@@ -9,83 +10,121 @@
 #include <string>
 #include <iterator>
 
-const std::string hw("Hello World\n");
+std::string GetPlatformName(cl_platform_id id)
+{
+	size_t size = 0;
+	clGetPlatformInfo(id, CL_PLATFORM_NAME, 0, nullptr, &size);
 
-//An inline method simply replaces all checkErr calls with this actual code.
-//(Speed vs size trade off)
-inline void checkErr(cl_int err, const char * name) {
-	if (err != CL_SUCCESS) {
-		std::cerr << "ERROR: " << name << " (" << err << ")" << std::endl;
-		exit(EXIT_FAILURE);
+	std::string result;
+	result.resize(size);
+	clGetPlatformInfo(id, CL_PLATFORM_NAME, size,
+		const_cast<char*> (result.data()), nullptr);
+
+	return result;
+}
+
+std::string GetDeviceName(cl_device_id id)
+{
+	size_t size = 0;
+	clGetDeviceInfo(id, CL_DEVICE_NAME, 0, nullptr, &size);
+
+	std::string result;
+	result.resize(size);
+	clGetDeviceInfo(id, CL_DEVICE_NAME, size,
+		const_cast<char*> (result.data()), nullptr);
+
+	return result;
+}
+
+void CheckError(cl_int error)
+{
+	if (error != CL_SUCCESS) {
+		std::cerr << "OpenCL call failed with error " << error << std::endl;
+		std::exit(1);
 	}
 }
 
-int main(void) {
-	//The standard 'int' varies in size depending on the platform. It could be 16, 32, or 64 bits.
-	//By using cl_int, we guarantee a datatype that is always 32 bits. Always use cl_ for data being passed to or from a device.
-	cl_int err;
-	std::vector< cl::Platform > platformList;
-	cl::Platform::get(&platformList);
-	checkErr(platformList.size() != 0 ? CL_SUCCESS : -1, "cl::Platform::get");
-	std::cerr << "Platform number is: " << platformList.size() << std::endl;
-	std::string platformVendor;
-	platformList[0].getInfo((cl_platform_info)CL_PLATFORM_VENDOR, &platformVendor);
-	std::cerr << "Platform is by: " << platformVendor << "\n";
-	cl_context_properties cprops[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)(platformList[0])(), 0 }; cl::Context context(
-		CL_DEVICE_TYPE_CPU,
-		cprops,
-		NULL,
-		NULL,
-		&err);
-	checkErr(err, "Context::Context()");
-	char * outH = new char[hw.length() + 1];
-	cl::Buffer outCL(
-		context,
-		CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
-		hw.length() + 1,
-		outH,
-		&err);
-	checkErr(err, "Buffer::Buffer()");
+int main()
+{
+	//--------------------------------- GETTING PLATFORM IDS --------------------------------------
+	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetPlatformIDs.html
+	#pragma region Getting_Platform_IDS
+	cl_uint platformIdCount = 0;
+	clGetPlatformIDs(0, nullptr, &platformIdCount);
 
-	std::vector<cl::Device> devices;
-	devices = context.getInfo<CL_CONTEXT_DEVICES>();
-	checkErr(devices.size() > 0 ? CL_SUCCESS : -1, "devices.size() > 0");
+	if (platformIdCount == 0) {
+		std::cerr << "No OpenCL platform found" << std::endl;
+		return 1;
+	}
+	else {
+		std::cout << "Found " << platformIdCount << " platform(s)" << std::endl;
+	}
 
-	std::ifstream file("kernels.cl");
-	checkErr(file.is_open() ? CL_SUCCESS : -1, "kernel.cl");
-	std::string prog(
-		std::istreambuf_iterator<char>(file),
-		(std::istreambuf_iterator<char>()));
-	cl::Program::Sources source(
-		1,
-		std::make_pair(prog.c_str(), prog.length() + 1));
-	cl::Program program(context, source);
-	err = program.build(devices, "");
-	checkErr(err, "Program::build()");
+	std::vector<cl_platform_id> platformIds(platformIdCount);
+	clGetPlatformIDs(platformIdCount, platformIds.data(), nullptr);
 
-	cl::Kernel kernel(program, "hello", &err);
-	checkErr(err, "Kernel::Kernel()"); err = kernel.setArg(0, outCL);
-	checkErr(err, "Kernel::setArg()");
+	for (cl_uint i = 0; i < platformIdCount; ++i) {
+		std::cout << "\t (" << (i + 1) << ") : " << GetPlatformName(platformIds[i]) << std::endl;
+	}
+	#pragma endregion Getting_Platform_IDS
 
-	cl::CommandQueue queue(context, devices[0], 0, &err);
-	checkErr(err, "CommandQueue::CommandQueue()"); cl::Event event;
-	err = queue.enqueueNDRangeKernel(
-		kernel,
-		cl::NullRange,
-		cl::NDRange(hw.length() + 1),
-		cl::NDRange(1, 1),
-		NULL,
-		&event);
-	checkErr(err, "ComamndQueue::enqueueNDRangeKernel()");
-	event.wait();
-	err = queue.enqueueReadBuffer(
-		outCL,
-		CL_TRUE,
-		0,
-		hw.length() + 1,
-		outH);
-	checkErr(err, "ComamndQueue::enqueueReadBuffer()");
-	std::cout << outH;
-	return EXIT_SUCCESS;
+	
+	//---------------------------------- GETTING DEVICE IDS ---------------------------------------
+	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetDeviceIDs.html
+	#pragma region Getting_Device_IDS
+	cl_uint deviceIdCount = 0;
+	clGetDeviceIDs(platformIds[platformIds.size() - 1], CL_DEVICE_TYPE_ALL, 0, nullptr,
+		&deviceIdCount);
+
+	if (deviceIdCount == 0) {
+		std::cerr << "No OpenCL devices found" << std::endl;
+		return 1;
+	}
+	else {
+		std::cout << "Found " << deviceIdCount << " device(s) for " + GetPlatformName(platformIds[platformIds.size() - 1]) << std::endl;
+	}
+
+	std::vector<cl_device_id> deviceIds(deviceIdCount);
+	clGetDeviceIDs(platformIds[platformIds.size() - 1], CL_DEVICE_TYPE_ALL, deviceIdCount,
+		deviceIds.data(), nullptr);
+
+	for (cl_uint i = 0; i < deviceIdCount; ++i) {
+		std::cout << "\t (" << (i + 1) << ") : " << GetDeviceName(deviceIds[i]) << std::endl;
+	}
+	#pragma endregion Getting_Device_IDS
+	
+	
+	//------------------------------------ CREATING CONTEXT ----------------------------------------
+	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateContext.html
+	#pragma region Creating_Context	
+	const cl_context_properties contextProperties[] =
+	{
+		CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties> (platformIds[platformIds.size() - 1]),
+		0, 0
+	};
+
+	cl_int error = CL_SUCCESS;
+	cl_context context = clCreateContext(contextProperties, deviceIdCount,
+		deviceIds.data(), nullptr, nullptr, &error);
+	CheckError(error);
+
+	std::cout << "Context created" << std::endl;
+
+	#pragma endregion Creating_Context
+	
+	
+	//--------------------------------- CREATING COMMAND QUEUE -------------------------------------
+	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateCommandQueue.html
+	#pragma region Creating_Command_Queue
+	cl_command_queue queue = clCreateCommandQueue(context, deviceIds[0],
+		0, &error);
+	CheckError(error);
+
+	// Here were ready to actually run the code
+
+	clReleaseCommandQueue(queue);
+
+	clReleaseContext(context);
+
+	#pragma endregion Creating_Command_Queue	
 }
-
