@@ -44,6 +44,28 @@ void CheckError(cl_int error)
 	}
 }
 
+std::string LoadKernel(const char* name)
+{
+	std::ifstream in(name);
+	std::string result(
+		(std::istreambuf_iterator<char>(in)),
+		std::istreambuf_iterator<char>());
+	return result;
+}
+
+cl_program CreateProgram(const std::string& source, cl_context context)
+{
+	size_t lengths[1] = { source.size() };
+	const char* sources[1] = { source.data() };
+	
+	cl_int error = 0;
+	cl_program program = clCreateProgramWithSource(context, 1, sources, lengths, &error);
+	CheckError(error);
+	
+	return program;
+}
+
+
 int main()
 {
 	//--------------------------------- GETTING PLATFORM IDS --------------------------------------
@@ -111,20 +133,80 @@ int main()
 	std::cout << "Context created" << std::endl;
 
 	#pragma endregion Creating_Context
-	
-	
+
+
 	//--------------------------------- CREATING COMMAND QUEUE -------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateCommandQueue.html
 	#pragma region Creating_Command_Queue
 	cl_command_queue queue = clCreateCommandQueue(context, deviceIds[0],
 		0, &error);
 	CheckError(error);
+	#pragma endregion Creating_Command_Queue
 
-	// Here were ready to actually run the code
+	//------------------------------------ CREATING PROGRAM ----------------------------------------
+	#pragma region Creating_Program	
+	cl_program program = CreateProgram(LoadKernel("kernels.cl"), context);
+
+	CheckError(clBuildProgram(program, deviceIdCount, deviceIds.data(), nullptr, nullptr, nullptr));
+
+	cl_kernel kernel = clCreateKernel(program, "SAXPY", &error);
+	CheckError(error);
+
+	// Prepare some test data
+	static const size_t testDataSize = 1 << 10;
+	std::vector<float> a(testDataSize), b(testDataSize);
+	for (int i = 0; i < testDataSize; ++i) {
+		a[i] = static_cast<float> (23 ^ i);
+		b[i] = static_cast<float> (42 ^ i);
+	}
+
+	cl_mem aBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		sizeof (float)* (testDataSize),
+		a.data(), &error);
+	CheckError(error);
+
+	cl_mem bBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+		sizeof (float)* (testDataSize),
+		b.data(), &error);
+	CheckError(error);
+	#pragma endregion Creating_Program	
+
+
+	//----------------------------------- DEFINING ARGUMENTS ---------------------------------------
+	#pragma region Defining_Arguments	
+	clSetKernelArg(kernel, 0, sizeof (cl_mem), &aBuffer);
+	clSetKernelArg(kernel, 1, sizeof (cl_mem), &bBuffer);
+	static const float two = 2.0f;
+	clSetKernelArg(kernel, 2, sizeof (float), &two);
+	#pragma endregion Defining_Arguments	
+	
+
+	//----------------------------------- DEFINING DIMENSION ---------------------------------------
+	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clEnqueueNDRangeKernel.html
+	#pragma region Defining_Dimension
+	const size_t globalWorkSize[] = { testDataSize, 0, 0 };
+	CheckError(clEnqueueNDRangeKernel(queue, kernel, 1,
+		nullptr,
+		globalWorkSize,
+		nullptr,
+		0, nullptr, nullptr));
+	#pragma endregion Defining_Dimension
+
+
+	//----------------------------------- RETRIEVING RESULTS ---------------------------------------
+	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clEnqueueReadBuffer.html
+	#pragma region Retrieving_Result
+	CheckError(clEnqueueReadBuffer(queue, bBuffer, CL_TRUE, 0,
+		sizeof (float)* testDataSize,
+		b.data(),
+		0, nullptr, nullptr));
+	#pragma endregion Retrieving_Results
+
 
 	clReleaseCommandQueue(queue);
-
+	clReleaseMemObject(bBuffer);
+	clReleaseMemObject(aBuffer);
+	clReleaseKernel(kernel);
+	clReleaseProgram(program);
 	clReleaseContext(context);
-
-	#pragma endregion Creating_Command_Queue	
 }

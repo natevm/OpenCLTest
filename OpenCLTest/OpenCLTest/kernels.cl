@@ -1,6 +1,5 @@
-#pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
-__constant char hw[] = "Hello World\n";
-__kernel void hello(__global char * out) {
-	size_t tid = get_global_id(0);
-	out[tid] = hw[tid];
+__kernel void SAXPY(__global float* x, __global float* y, float a)
+{
+	const int i = get_global_id(0);
+	y[i] += a * x[i];
 }
