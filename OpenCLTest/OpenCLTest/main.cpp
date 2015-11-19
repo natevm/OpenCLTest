@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <iterator>
 
 std::string GetPlatformName(cl_platform_id id)
@@ -70,7 +71,7 @@ int main()
 {
 	//--------------------------------- GETTING PLATFORM IDS --------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetPlatformIDs.html
-	#pragma region Getting_Platform_IDS
+#pragma region Getting_Platform_IDS
 	cl_uint platformIdCount = 0;
 	clGetPlatformIDs(0, nullptr, &platformIdCount);
 
@@ -88,12 +89,12 @@ int main()
 	for (cl_uint i = 0; i < platformIdCount; ++i) {
 		std::cout << "\t (" << (i + 1) << ") : " << GetPlatformName(platformIds[i]) << std::endl;
 	}
-	#pragma endregion Getting_Platform_IDS
+#pragma endregion Getting_Platform_IDS
 
-	
+
 	//---------------------------------- GETTING DEVICE IDS ---------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetDeviceIDs.html
-	#pragma region Getting_Device_IDS
+#pragma region Getting_Device_IDS
 	cl_uint deviceIdCount = 0;
 	clGetDeviceIDs(platformIds[platformIds.size() - 1], CL_DEVICE_TYPE_ALL, 0, nullptr,
 		&deviceIdCount);
@@ -113,12 +114,13 @@ int main()
 	for (cl_uint i = 0; i < deviceIdCount; ++i) {
 		std::cout << "\t (" << (i + 1) << ") : " << GetDeviceName(deviceIds[i]) << std::endl;
 	}
-	#pragma endregion Getting_Device_IDS
-	
-	
+#pragma endregion Getting_Device_IDS
+
+
 	//------------------------------------ CREATING CONTEXT ----------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateContext.html
-	#pragma region Creating_Context	
+#pragma region Creating_Context	
+	std::cout << "Creating a context: ";
 	const cl_context_properties contextProperties[] =
 	{
 		CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties> (platformIds[platformIds.size() - 1]),
@@ -130,34 +132,44 @@ int main()
 		deviceIds.data(), nullptr, nullptr, &error);
 	CheckError(error);
 
-	std::cout << "Context created" << std::endl;
+	std::cout << "SUCCESS" << std::endl;
 
-	#pragma endregion Creating_Context
+#pragma endregion Creating_Context
 
 
 	//--------------------------------- CREATING COMMAND QUEUE -------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateCommandQueue.html
-	#pragma region Creating_Command_Queue
+#pragma region Creating_Command_Queue
+	std::cout << "Creating a command queue: ";
+
 	cl_command_queue queue = clCreateCommandQueue(context, deviceIds[0],
 		0, &error);
 	CheckError(error);
-	#pragma endregion Creating_Command_Queue
+	std::cout << "SUCCESS" << std::endl;
+
+#pragma endregion Creating_Command_Queue
 
 	//------------------------------------ CREATING PROGRAM ----------------------------------------
-	#pragma region Creating_Program	
+#pragma region Creating_Program	
+	std::cout << "Creating a program kernel: ";
+
 	cl_program program = CreateProgram(LoadKernel("kernels.cl"), context);
 
 	CheckError(clBuildProgram(program, deviceIdCount, deviceIds.data(), nullptr, nullptr, nullptr));
 
 	cl_kernel kernel = clCreateKernel(program, "SAXPY", &error);
 	CheckError(error);
+	std::cout << "SUCCESS" << std::endl;
+
 
 	// Prepare some test data
-	static const size_t testDataSize = 1 << 10;
+	std::cout << "Preparing test data: ";
+	static const size_t testDataSize = 1 << 2;
 	std::vector<float> a(testDataSize), b(testDataSize);
 	for (int i = 0; i < testDataSize; ++i) {
 		a[i] = static_cast<float> (23 ^ i);
 		b[i] = static_cast<float> (42 ^ i);
+		std::cout << "\n" + std::to_string(a[i]) + " " + std::to_string(b[i]);
 	}
 
 	cl_mem aBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -202,6 +214,11 @@ int main()
 		0, nullptr, nullptr));
 	#pragma endregion Retrieving_Results
 
+	std::cout << "\nResult:" << std::endl;
+	for (int i = 0; i < b.size(); i++)
+	{
+		std::cout << std::to_string(b[i]) + "\n";
+	}
 
 	clReleaseCommandQueue(queue);
 	clReleaseMemObject(bBuffer);
@@ -209,4 +226,7 @@ int main()
 	clReleaseKernel(kernel);
 	clReleaseProgram(program);
 	clReleaseContext(context);
+
+	std::cout << "\nDone! Press enter to exit.";
+	std::getchar();
 }
