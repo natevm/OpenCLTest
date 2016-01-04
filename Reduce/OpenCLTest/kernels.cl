@@ -50,11 +50,11 @@ __global float* result)
 		scratch[local_index] = buffer[global_index];
 	}
 	else {
-		//Infinity is the identity element for the in operation
-		scratch[local_index] = INFINITY;
+		//Infinity is the identity element for the add operation
+		scratch[local_index] = 0;
 	}
 
-	//Barrier syncs all workers.
+	//Barrier syncs all local workers.
 	barrier(CLK_LOCAL_MEM_FENCE);
 
 	for (int offset = get_local_size(0) / 2; offset > 0; offset >>= 1) {
