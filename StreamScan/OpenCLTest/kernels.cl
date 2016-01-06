@@ -24,6 +24,7 @@ __local int* scratch)
 		if (lid < offset) 
 			scratch[lid] = scratch[lid + offset] + scratch[lid];
 	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 
 //ADJACENT SYNCRONIZATION
 	int intermediateIndex = gid / get_local_size(0);
@@ -37,7 +38,7 @@ __local int* scratch)
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 	buffer[gid] = I[intermediateIndex] - scratch[0];
-	
+	barrier(CLK_LOCAL_MEM_FENCE);
 //HILLIES SCAN
 	scratch[lid] = localBuffer[lid];
 	barrier(CLK_LOCAL_MEM_FENCE);
@@ -49,5 +50,6 @@ __local int* scratch)
 		barrier(CLK_LOCAL_MEM_FENCE);
 		SWAP(localBuffer, scratch);
 	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 	buffer[gid] += localBuffer[lid];
 }

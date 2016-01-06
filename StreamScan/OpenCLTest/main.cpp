@@ -167,11 +167,11 @@ int main()
 
 	// Prepare some test data
 	std::cout << "Preparing test data: ";
-	static const size_t testDataSize = 1 << 26;
-	static const size_t workgroupSize = 1024;
+	static const size_t testDataSize = 1 << 8;
+	static const size_t workgroupSize = 64;
 	std::vector<int> input(testDataSize), intermediate(testDataSize), result(testDataSize);
 	for (int i = 0; i < testDataSize; ++i) 
-		input[i] = static_cast<float> (1);
+		input[i] = static_cast<int> (5);
 	for (int i = 0; i < testDataSize / workgroupSize; ++i)
 		intermediate[i] = -1;
 
