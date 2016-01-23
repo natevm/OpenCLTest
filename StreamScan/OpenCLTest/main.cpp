@@ -167,7 +167,7 @@ int main()
 
 	// Prepare some test data
 	std::cout << "Preparing test data: ";
-	static const size_t testDataSize = 1 << 8;
+	static const size_t testDataSize = 1 << 25;
 	static const size_t workgroupSize = 64;
 	std::vector<int> input(testDataSize), intermediate(testDataSize), result(testDataSize);
 	for (int i = 0; i < testDataSize; ++i) 

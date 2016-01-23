@@ -40,19 +40,19 @@ __local int* scratch)
 	
 	//ADJACENT SYNCRONIZATION
 	barrier(CLK_LOCAL_MEM_FENCE);
-	int intermediateIndex = gid / get_local_size(0);
+	int workgroupIndex = gid / get_local_size(0); //get workgroup id
 	if (lid == 0) {
 		int p = 0;
-		if (intermediateIndex == 0) I[0] = scratch[0];
+		if (workgroupIndex == 0) I[0] = scratch[0];
 		else{
-			while ((p = I[intermediateIndex - 1]) == F){}
-			I[intermediateIndex] = p + scratch[0];
+			while ((p = I[workgroupIndex - 1]) == F){}
+			I[workgroupIndex] = p + scratch[0];
 		}
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
-	result[gid] = I[intermediateIndex] - scratch[0];
+	result[gid] = I[workgroupIndex] - scratch[0]; //Calculating starting point of scan
+
 	//HILLIES SCAN
-	
 	barrier(CLK_LOCAL_MEM_FENCE);
 	scratch[lid] = localBuffer[lid];
 	for (uint i = 1; i < ls; i <<= 1) {
@@ -82,6 +82,6 @@ __kernel void Sort(
 	else 
 		index = rightBuffer[gid] + leftBuffer[size-1]; 
 	int temp = inputBuffer[gid];
-	barrier(CLK_LOCAL_MEM_FENCE);
+	barrier(CLK_GLOBAL_MEM_FENCE);
 	inputBuffer[index-1] = temp;
 }

@@ -181,7 +181,7 @@ int main()
 
 	// Prepare some test data
 	myfile << "Preparing test data: ";
-	int numBits = 8;
+	int numBits = 14;
 	static const size_t inputSize = 1<<numBits;//1 << numBits;
 	static const size_t workgroupSize = 1024;
 	std::vector<int> input(inputSize), intermediate(inputSize / workgroupSize), predicate(inputSize), address(inputSize), result(inputSize);
@@ -211,6 +211,7 @@ int main()
 		sizeof (int)* (inputSize),
 		result.data(), &error);
 	CheckError(error);
+#pragma endregion Creating_Program
 	
 	//----------------------------------- RADIX SORT ---------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clEnqueueNDRangeKernel.html
@@ -277,7 +278,7 @@ int main()
 		clSetKernelArg(sortKernel, 1, sizeof (cl_mem), &lPredicateBuffer);
 		clSetKernelArg(sortKernel, 2, sizeof (cl_mem), &leftBuffer);
 		clSetKernelArg(sortKernel, 3, sizeof (cl_mem), &rightBuffer);
-		clSetKernelArg(sortKernel, 4, sizeof (int), &inputSize);
+		clSetKernelArg(sortKernel, 4, sizeof (unsigned int), &inputSize);
 		CheckError(clEnqueueNDRangeKernel(queue, sortKernel, 1,
 			nullptr,
 			globalWorkSize,

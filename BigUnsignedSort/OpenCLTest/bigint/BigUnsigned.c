@@ -1,4 +1,3 @@
-#ifndef __cplusplus
 #ifndef BIGUNSIGNED_C
 #define BIGUNSIGNED_C
 
@@ -9,9 +8,11 @@
 
 typedef unsigned int Index; // Type for the index of a block in the array
 typedef unsigned long Blk;  // Type for the blocks
-#define bool _Bool
-#define false 0
+#ifndef __cplusplus
+typedef int bool;
+#endif
 #define true 1
+#define false 0
 
 // Enumeration for result of a comparison.
 //enum CmpRes { less = -1, equal = 0, greater = 1 } ;     
@@ -43,7 +44,7 @@ void zapLeadingZeros(struct BigUnsigned * bu) {
   while (bu->len > 0 && bu->blk[bu->len - 1] == 0)
     bu->len--;
 }
-bool isBUZero(struct BigUnsigned *bu) { return bu->len == 0; }
+int isBUZero(struct BigUnsigned *bu) { return bu->len == 0; }
 void allocateBU(struct BigUnsigned *bu, Index c) {
   // If the requested capacity is more than the current capacity...
   #ifdef BIG_INTEGER_STATIC
@@ -615,5 +616,4 @@ struct BigUnsigned shiftBULeft(struct BigUnsigned *a, int b) {
   return result;
 }
 
-#endif
 #endif

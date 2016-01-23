@@ -68,4 +68,5 @@ __global float* result)
 	if (local_index == 0) {
 		result[get_group_id(0)] = scratch[0];
 	}
+	
 }

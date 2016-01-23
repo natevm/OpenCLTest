@@ -116,7 +116,6 @@ int main()
 	}
 #pragma endregion Getting_Device_IDS
 
-
 	//------------------------------------ CREATING CONTEXT ----------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateContext.html
 #pragma region Creating_Context	
@@ -165,7 +164,7 @@ int main()
 	// Prepare some test data
 	std::cout << "Preparing test data: ";
 	static const size_t testDataSize = 1 << 10;
-	std::vector<float> a(testDataSize), result(1);
+	std::vector<float> a(testDataSize), result(testDataSize);
 	for (int i = 0; i < testDataSize; ++i) {
 		a[i] = static_cast<float> (i);
 		std::cout << "\n" + std::to_string(a[i]);
@@ -205,14 +204,16 @@ int main()
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clEnqueueReadBuffer.html
 	#pragma region Retrieving_Result
 	CheckError(clEnqueueReadBuffer(queue, resultBuffer, CL_TRUE, 0,
-		sizeof (float),
+		sizeof (float)*testDataSize,
 		result.data(),
 		0, nullptr, nullptr));
 	#pragma endregion Retrieving_Results
 
 	std::cout << "\nResult:" << std::endl;
 	
-	std::cout << std::to_string(result[0]) + "\n";
+
+		std::cout << std::to_string(result[0]) + "\n";
+	
 
 	clReleaseCommandQueue(queue);
 	clReleaseMemObject(resultBuffer);
