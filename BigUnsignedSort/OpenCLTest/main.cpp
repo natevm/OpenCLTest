@@ -12,6 +12,8 @@
 #include <iterator>
 #include <bitset>
 #include <chrono>
+#include "bigint\BigUnsigned_UnitTest.h"
+
 
 std::string GetPlatformName(cl_platform_id id)
 {
@@ -71,6 +73,8 @@ cl_program CreateProgram(const std::string& source, cl_context context)
 
 int main()
 {
+	testBigUnsigned();
+
 
 	std::ofstream myfile;
 	myfile.open("example.txt");
@@ -334,6 +338,7 @@ int main()
 
 
 	myfile.close();
+
 
 	std::cout << "\nDone! Press enter to exit.";
 	std::getchar();

@@ -1,4 +1,6 @@
 #include "../bigint/BigUnsigned.c"
+#include <iostream>
+using namespace std;
 
 //CONSTRUCTION
 void testBigUnsignedConstructors(){
