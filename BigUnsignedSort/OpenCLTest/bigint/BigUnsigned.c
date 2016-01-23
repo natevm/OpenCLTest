@@ -1,27 +1,32 @@
 #ifndef BIGUNSIGNED_C
 #define BIGUNSIGNED_C
-
-//#include <stdexcept>
-
 #define BIG_INTEGER_STATIC
 #define BIG_INTEGER_SIZE 100
 
 typedef unsigned int Index; // Type for the index of a block in the array
 typedef unsigned long Blk;  // Type for the blocks
-#ifndef __cplusplus
-typedef int bool;
-#endif
-#define true 1
-#define false 0
 
-// Enumeration for result of a comparison.
-//enum CmpRes { less = -1, equal = 0, greater = 1 } ;     
+
+#ifndef __cplusplus
+  #if __STDC_VERSION__ < 199901L
+	typedef int bool;
+	#define true 1
+	#define false 0
+  #endif
+#endif
 
 // Make sure we have NULL.
 #ifndef NULL
-#define NULL 0
+  #define NULL 0
 #endif
-const unsigned int N = 8 * sizeof(Blk);
+
+#if defined(__OPENCL_VERSION__)
+	__constant unsigned int N = 8 * sizeof(Blk);
+#else
+	const unsigned int N = 8 * sizeof(Blk);
+#endif
+
+	
 
 // struct BigUnsigned allows storing integers larger than a long using an array of blk.
 struct BigUnsigned {
@@ -34,7 +39,6 @@ struct BigUnsigned {
   #else
 	Blk *blk;
   #endif
-
   //~~ BigUnsigned Fields  ~~//
 };
 

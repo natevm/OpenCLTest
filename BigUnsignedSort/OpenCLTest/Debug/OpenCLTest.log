@@ -1,9 +1,27 @@
-﻿Build started 1/22/2016 6:11:10 PM.
+﻿Build started 1/22/2016 8:52:51 PM.
      1>Project "C:\Users\Nate\git\OpenCL\BigUnsignedSort\OpenCLTest\OpenCLTest.vcxproj" on node 2 (Build target(s)).
-     1>Link:
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt bigint\BigUnsigned.c
+         BigUnsigned.c
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(267): warning C4244: 'initializing' : conversion from 'Blk' to 'unsigned short', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(186): warning C4715: 'createLBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(207): warning C4715: 'createIBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(228): warning C4715: 'createSBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(249): warning C4715: 'buToULong' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(262): warning C4715: 'buToUInt' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(283): warning C4715: 'buToLong' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(275): warning C4715: 'buToUShort' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(291): warning C4715: 'buToInt' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(299): warning C4715: 'buToShort' : not all control paths return a value
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         Skipping... (no relevant changes detected)
+         main.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\Win32" OpenCL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.lib" /MACHINE:X86 Debug\BigUnsigned.obj
+         Debug\main.obj
          OpenCLTest.vcxproj -> C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.exe
      1>Done Building Project "C:\Users\Nate\git\OpenCL\BigUnsignedSort\OpenCLTest\OpenCLTest.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.03
+Time Elapsed 00:00:00.45
