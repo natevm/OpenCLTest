@@ -4,8 +4,7 @@
 #define BIG_INTEGER_SIZE 100
 
 typedef unsigned int Index; // Type for the index of a block in the array
-typedef unsigned long Blk;  // Type for the blocks
-
+typedef unsigned short Blk;  // Type for the blocks 
 
 #ifndef __cplusplus
   #if __STDC_VERSION__ < 199901L
@@ -20,18 +19,17 @@ typedef unsigned long Blk;  // Type for the blocks
   #define NULL 0
 #endif
 
+// Number of bits in a block.
 #if defined(__OPENCL_VERSION__)
-	__constant unsigned int N = 8 * sizeof(Blk);
+	__constant unsigned int numBUBits = 8 * sizeof(Blk);
 #else
-	const unsigned int N = 8 * sizeof(Blk);
+	const unsigned int numBUBits = 8 * sizeof(Blk);
 #endif
-
 	
 
 // struct BigUnsigned allows storing integers larger than a long using an array of blk.
 struct BigUnsigned {
   //~~ NumberlikeArray Fields ~~//
-	/*static*/ unsigned int N;  // Number of bits in a block.
   Index cap;                                      // Current allocated capacity (in blocks)
   Index len;                                      // Actual length of the value stored (in blocks)
   #ifdef BIG_INTEGER_STATIC                       // Heap-allocated array of the blocks (can be NULL if len == 0)
@@ -92,7 +90,7 @@ void allocateBUAndCopy(struct BigUnsigned *x, Index c) {
 //~~CONSTRUCTORS~~//
 struct BigUnsigned createBUBU(struct BigUnsigned *x) {
   struct BigUnsigned bu;
-  bu.N = N;
+  
   bu.len = x->len;
   // Create array
   bu.cap = x->len;
@@ -107,7 +105,6 @@ struct BigUnsigned createBUBU(struct BigUnsigned *x) {
 }
 struct BigUnsigned createBU(){
   struct BigUnsigned bu;
-  bu.N = N;
   bu.cap = 0;
   bu.len = 0;
   #ifndef BIG_INTEGER_STATIC
@@ -120,7 +117,6 @@ struct BigUnsigned createULBU(unsigned long x) {
   if (x == 0)
       return createBU();
   else {
-	bu.N = N;
     bu.cap = 1;
     #ifndef BIG_INTEGER_STATIC
         bu.blk = new Blk[1];
@@ -136,7 +132,6 @@ struct BigUnsigned createUIBU(unsigned int x) {
   if (x == 0)
     return createBU();
   else {
-	bu.N = N;
     bu.cap = 1;
     #ifndef BIG_INTEGER_STATIC
         bu.blk = new Blk[1];
@@ -152,7 +147,7 @@ struct BigUnsigned createUSBU(unsigned short x) {
   if (x == 0)
     return createBU();
   else {
-	bu.N = N;
+	
     bu.cap = 1;
     #ifndef BIG_INTEGER_STATIC
         bu.blk = new Blk[1];
@@ -172,7 +167,6 @@ struct BigUnsigned createLBU(long x) {
     if (x == 0)
       return createBU();
     else {
-	  bu.N = N;
       bu.cap = 1;
       #ifndef BIG_INTEGER_STATIC
           bu.blk = new Blk[1];
@@ -193,7 +187,6 @@ struct BigUnsigned createIBU(int x) {
     if (x == 0)
       return createBU();
     else {
-	  bu.N = N;
       bu.cap = 1;
       #ifndef BIG_INTEGER_STATIC
           bu.blk = new Blk[1];
@@ -214,7 +207,6 @@ struct BigUnsigned createSBU(short x) {
     if (x == 0)
       return createBU();
     else {
-	  bu.N = N;
       bu.cap = 1;
       #ifndef BIG_INTEGER_STATIC
           bu.blk = new Blk[1];
@@ -330,7 +322,7 @@ void setBUBlock(struct BigUnsigned *bu, Index i, Blk newBlock) {
   }
 }
 Blk getShiftedBUBlock(struct BigUnsigned *num, Index x, unsigned int y) {
-	Blk part1 = (x == 0 || y == 0) ? 0 : (num->blk[x - 1] >> (num->N - y));
+	Blk part1 = (x == 0 || y == 0) ? 0 : (num->blk[x - 1] >> (numBUBits - y));
 	Blk part2 = (x == num->len) ? 0 : (num->blk[x] << y);
   return part1 | part2;
 }
@@ -344,17 +336,17 @@ Index getBUBitLength(struct BigUnsigned *bu) {
       leftmostBlock >>= 1;
       leftmostBlockLen++;
     }
-    return leftmostBlockLen + (bu->len - 1) * bu->N;
+	return leftmostBlockLen + (bu->len - 1) * numBUBits;
   }
 }
 bool getBUBit(struct BigUnsigned *bu, Index bi) {
 	Blk b = 1;
-  return (getBUBlock(bu, bi / bu->N) & (b << (bi % bu->N))) != 0;
+	return (getBUBlock(bu, bi / numBUBits) & (b << (bi % numBUBits))) != 0;
 }
 void setBUBit(struct BigUnsigned *bu, Index bi, bool newBit) {
-  Index blockI = bi / bu->N;
+  Index blockI = bi / numBUBits;
   Blk b = 1;
-  Blk block = getBUBlock(bu, blockI), mask = b << (bi % bu->N);
+  Blk block = getBUBlock(bu, blockI), mask = b << (bi % numBUBits);
   block = newBit ? (block | mask) : (block & ~mask);
   setBUBlock(bu, blockI, block);
 }
@@ -571,8 +563,8 @@ struct BigUnsigned shiftBURight(struct BigUnsigned *a, int b) {
 	}
 	// This calculation is wacky, but expressing the shift as a left bit shift
 	// within each block lets us use getShiftedBlock.
-	Index rightShiftBlocks = (b + result.N - 1) / result.N;
-	unsigned int leftShiftBits = result.N * rightShiftBlocks - b;
+	Index rightShiftBlocks = (b + numBUBits - 1) / numBUBits;
+	unsigned int leftShiftBits = numBUBits * rightShiftBlocks - b;
 	// Now (N * rightShiftBlocks - leftShiftBits) == b
 	// and 0 <= leftShiftBits < N.
 	if (rightShiftBlocks >= a->len + 1) {
@@ -604,8 +596,8 @@ struct BigUnsigned shiftBULeft(struct BigUnsigned *a, int b) {
       return shiftBURight(a, -b);
     }
   }
-  Index shiftBlocks = b / result.N;
-  unsigned int shiftBits = b % result.N;
+  Index shiftBlocks = b / numBUBits;
+  unsigned int shiftBits = b % numBUBits;
   // + 1: room for high bits nudged left into another block
   result.len = a->len + shiftBlocks + 1;
   allocateBU(&result, result.len);

@@ -13,6 +13,7 @@
 #include <bitset>
 #include <chrono>
 
+#include "bigint\BigUnsigned_UnitTest.h"
 std::string GetPlatformName(cl_platform_id id)
 {
 	size_t size = 0;
@@ -88,10 +89,12 @@ cl_program CreateProgram(const std::string& source, cl_context context)
 
 int main()
 {
+	testBigUnsigned();
+	std::getchar();
+
 
 	std::ofstream myfile;
 	myfile.open("example.txt");
-	myfile << "Writing this to a file.\n";
 
 
 	//--------------------------------- GETTING PLATFORM IDS --------------------------------------
@@ -194,9 +197,8 @@ int main()
 	}
 
 	std::vector<const char*> cstrings;
-
 	for (size_t i = 0; i < sources.size(); ++i)
-		cstrings.push_back(const_cast<char*>(sources[i].c_str()));
+		cstrings.push_back(sources[i].data());
 
 	cl_program program = clCreateProgramWithSource(context, numFiles, &cstrings[0], &sourceLengths[0], &error);
 		//(LoadKernel("kernels.cl"), context);

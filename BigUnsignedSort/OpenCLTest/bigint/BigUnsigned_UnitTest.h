@@ -12,7 +12,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: length not 0!" << endl;
 	if (bu.cap != 0)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 
 	cout << "\tBigUnsigned should be constructed with a short." << endl;
@@ -22,7 +22,7 @@ void testBigUnsignedConstructors(){
 		cout << "\tERROR: length not 0!" << endl;
 	if (bu.cap != 1)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 
 	cout << "\tBigUnsigned should be constructed with a int." << endl;
@@ -31,7 +31,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: length not 0!" << endl;
 	if (bu.cap != 1)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 
 
@@ -41,7 +41,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: length not 0!" << endl;
 	if (bu.cap != 1)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 
 	cout << "\tBigUnsigned should be constructed with an unsigned short." << endl;
@@ -50,7 +50,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: length not 0!" << endl;
 	if (bu.cap != 1)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 
 	cout << "\tBigUnsigned should be constructed with an unsigned int." << endl;
@@ -59,7 +59,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: length not 0!" << endl;
 	if (bu.cap != 1)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 
 	cout << "\tBigUnsigned should be constructed with an unsigned long." << endl;
@@ -68,7 +68,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: length not 0!" << endl;
 	if (bu.cap != 1)
 		cout << "\t\tERROR: cap not 0!" << endl;
-	if (bu.N != 8 * sizeof(Blk))
+	if (numBUBits != 8 * sizeof(Blk))
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 }
 

@@ -1,18 +1,20 @@
-﻿Build started 1/22/2016 8:52:51 PM.
+﻿Build started 1/29/2016 1:33:52 PM.
      1>Project "C:\Users\Nate\git\OpenCL\BigUnsignedSort\OpenCLTest\OpenCLTest.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt bigint\BigUnsigned.c
          BigUnsigned.c
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(267): warning C4244: 'initializing' : conversion from 'Blk' to 'unsigned short', possible loss of data
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(186): warning C4715: 'createLBU' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(207): warning C4715: 'createIBU' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(228): warning C4715: 'createSBU' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(249): warning C4715: 'buToULong' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(262): warning C4715: 'buToUInt' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(283): warning C4715: 'buToLong' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(275): warning C4715: 'buToUShort' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(291): warning C4715: 'buToInt' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(299): warning C4715: 'buToShort' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(125): warning C4244: 'initializing' : conversion from 'unsigned long' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(175): warning C4244: 'initializing' : conversion from 'long' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(235): warning C4244: 'initializing' : conversion from 'unsigned long' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(180): warning C4715: 'createLBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(220): warning C4715: 'createSBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(200): warning C4715: 'createIBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(241): warning C4715: 'buToULong' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(254): warning C4715: 'buToUInt' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(267): warning C4715: 'buToUShort' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(275): warning C4715: 'buToLong' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(283): warning C4715: 'buToInt' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(291): warning C4715: 'buToShort' : not all control paths return a value
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          Skipping... (no relevant changes detected)
          main.cpp
@@ -24,4 +26,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.45
+Time Elapsed 00:00:00.35
