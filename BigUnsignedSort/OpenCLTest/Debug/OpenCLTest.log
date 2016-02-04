@@ -1,23 +1,23 @@
-﻿Build started 1/29/2016 1:33:52 PM.
+﻿Build started 2/3/2016 5:36:43 PM.
      1>Project "C:\Users\Nate\git\OpenCL\BigUnsignedSort\OpenCLTest\OpenCLTest.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt bigint\BigUnsigned.c
-         BigUnsigned.c
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(125): warning C4244: 'initializing' : conversion from 'unsigned long' to 'Blk', possible loss of data
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(175): warning C4244: 'initializing' : conversion from 'long' to 'Blk', possible loss of data
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(235): warning C4244: 'initializing' : conversion from 'unsigned long' to 'Blk', possible loss of data
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(180): warning C4715: 'createLBU' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(220): warning C4715: 'createSBU' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(200): warning C4715: 'createIBU' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(241): warning C4715: 'buToULong' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(254): warning C4715: 'buToUInt' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(267): warning C4715: 'buToUShort' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(275): warning C4715: 'buToLong' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(283): warning C4715: 'buToInt' : not all control paths return a value
-     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(291): warning C4715: 'buToShort' : not all control paths return a value
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
-         Skipping... (no relevant changes detected)
          main.cpp
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(128): warning C4244: 'initializing' : conversion from 'unsigned long' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(160): warning C4244: 'initializing' : conversion from 'unsigned short' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(180): warning C4244: 'initializing' : conversion from 'long' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(222): warning C4244: 'initializing' : conversion from 'short' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(247): warning C4244: 'initializing' : conversion from 'unsigned long' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(273): warning C4244: 'initializing' : conversion from 'unsigned short' to 'Blk', possible loss of data
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(185): warning C4715: 'createLBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(227): warning C4715: 'createSBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(206): warning C4715: 'createIBU' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(253): warning C4715: 'buToULong' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(266): warning C4715: 'buToUInt' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(279): warning C4715: 'buToUShort' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(287): warning C4715: 'buToLong' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(295): warning C4715: 'buToInt' : not all control paths return a value
+     1>c:\users\nate\git\opencl\bigunsignedsort\opencltest\bigint\bigunsigned.c(303): warning C4715: 'buToShort' : not all control paths return a value
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\Win32" OpenCL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Nate\git\OpenCL\BigUnsignedSort\Debug\OpenCLTest.lib" /MACHINE:X86 Debug\BigUnsigned.obj
          Debug\main.obj
@@ -26,4 +26,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.35
+Time Elapsed 00:00:01.02

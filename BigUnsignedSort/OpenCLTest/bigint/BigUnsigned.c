@@ -1,10 +1,10 @@
 #ifndef BIGUNSIGNED_C
 #define BIGUNSIGNED_C
 #define BIG_INTEGER_STATIC
-#define BIG_INTEGER_SIZE 100
+#define BIG_INTEGER_SIZE 2
 
 typedef unsigned int Index; // Type for the index of a block in the array
-typedef unsigned short Blk;  // Type for the blocks 
+typedef unsigned char Blk;  // Type for the blocks 
 
 #ifndef __cplusplus
   #if __STDC_VERSION__ < 199901L
@@ -32,6 +32,7 @@ struct BigUnsigned {
   //~~ NumberlikeArray Fields ~~//
   Index cap;                                      // Current allocated capacity (in blocks)
   Index len;                                      // Actual length of the value stored (in blocks)
+  bool isNULL;
   #ifdef BIG_INTEGER_STATIC                       // Heap-allocated array of the blocks (can be NULL if len == 0)
 	Blk blk[BIG_INTEGER_SIZE];
   #else
@@ -90,7 +91,7 @@ void allocateBUAndCopy(struct BigUnsigned *x, Index c) {
 //~~CONSTRUCTORS~~//
 struct BigUnsigned createBUBU(struct BigUnsigned *x) {
   struct BigUnsigned bu;
-  
+  bu.isNULL = x->isNULL;
   bu.len = x->len;
   // Create array
   bu.cap = x->len;
@@ -105,6 +106,7 @@ struct BigUnsigned createBUBU(struct BigUnsigned *x) {
 }
 struct BigUnsigned createBU(){
   struct BigUnsigned bu;
+  bu.isNULL = false;
   bu.cap = 0;
   bu.len = 0;
   #ifndef BIG_INTEGER_STATIC
@@ -117,6 +119,7 @@ struct BigUnsigned createULBU(unsigned long x) {
   if (x == 0)
       return createBU();
   else {
+	  bu.isNULL = false;
     bu.cap = 1;
     #ifndef BIG_INTEGER_STATIC
         bu.blk = new Blk[1];
@@ -132,6 +135,7 @@ struct BigUnsigned createUIBU(unsigned int x) {
   if (x == 0)
     return createBU();
   else {
+	  bu.isNULL = false;
     bu.cap = 1;
     #ifndef BIG_INTEGER_STATIC
         bu.blk = new Blk[1];
@@ -147,7 +151,7 @@ struct BigUnsigned createUSBU(unsigned short x) {
   if (x == 0)
     return createBU();
   else {
-	
+	  bu.isNULL = false;
     bu.cap = 1;
     #ifndef BIG_INTEGER_STATIC
         bu.blk = new Blk[1];
@@ -167,6 +171,7 @@ struct BigUnsigned createLBU(long x) {
     if (x == 0)
       return createBU();
     else {
+		bu.isNULL = false;
       bu.cap = 1;
       #ifndef BIG_INTEGER_STATIC
           bu.blk = new Blk[1];
@@ -187,6 +192,7 @@ struct BigUnsigned createIBU(int x) {
     if (x == 0)
       return createBU();
     else {
+		bu.isNULL = false;
       bu.cap = 1;
       #ifndef BIG_INTEGER_STATIC
           bu.blk = new Blk[1];
@@ -207,6 +213,7 @@ struct BigUnsigned createSBU(short x) {
     if (x == 0)
       return createBU();
     else {
+		bu.isNULL = false;
       bu.cap = 1;
       #ifndef BIG_INTEGER_STATIC
           bu.blk = new Blk[1];
@@ -223,6 +230,11 @@ struct BigUnsigned createIMorton(int x) {
 }
 struct BigUnsigned createUIMorton(unsigned int x) {
 	return createUIBU(x);
+}
+struct BigUnsigned createNULLBU(){
+	struct BigUnsigned bu = createBU();
+	bu.isNULL = true;
+	return bu;
 }
 
 //~~CONVERSIONS~~//
@@ -291,12 +303,20 @@ short buToShort(struct BigUnsigned *bu) {
 }
 
 #ifdef __cplusplus
+
 #include <string>
 std::string buToString(struct BigUnsigned *bu) {
 	std::string representation = "";
-	for (int i = bu->len; i > 0; --i) {
-		representation += "[" + std::to_string(bu->blk[i - 1]) + "]";
+	if (bu->len == 0)
+	{
+		representation += "[0]";
 	}
+	else {
+		for (int i = bu->len; i > 0; --i) {
+			representation += "[" + std::to_string(bu->blk[i - 1]) + "]";
+		}
+	}
+
 	return representation;
 }
 #endif

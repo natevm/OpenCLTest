@@ -72,7 +72,7 @@ void testBigUnsignedConstructors(){
 		cout << "\t\tERROR: N does not equal " << 8 * sizeof(Blk) << endl;
 }
 
-//ARITHMATIC OPERATORS
+//ARITHMETIC OPERATORS
 void testBigUnsignedAddition() {
 	cout << "TESTING BU ADDITION" << endl;
 	cout << "\tAddition of a BigUnsigned should be defined." << endl;
@@ -122,7 +122,6 @@ void testBigUnsignedBlockAccessors(){
 		cout << "\t\tERROR: getShiftedBUBlock(bu, 0, -1) of the BU [1][1] does not equal 2147483648" << endl;
 	else
 		cout << "\t\tSUCCESS: getShiftedBUBlock(bu, 0, -1) of the BU[1][1] equals 2147483648" << endl;
-
 }
 void testBigUnsignedBitAccessors(){
 	cout << "TESTING BU BIT ACCESSORS AND MUTATORS" << endl;

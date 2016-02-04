@@ -44,8 +44,10 @@ void CheckError(cl_int error)
 {
 	if (error != CL_SUCCESS) {
 		std::cerr << "OpenCL call failed with error " << error << std::endl;
-		if (error != CL_BUILD_PROGRAM_FAILURE)
+		if (error != CL_BUILD_PROGRAM_FAILURE) {
+			std::getchar();
 			std::exit(1);
+		}
 	}
 }
 void checkBuildError(cl_int err, cl_program program, cl_device_id deviceid) {
@@ -73,7 +75,6 @@ std::string LoadKernel(const char* name)
 		std::istreambuf_iterator<char>());
 	return result;
 }
-
 cl_program CreateProgram(const std::string& source, cl_context context)
 {
 	size_t lengths[1] = { source.size() };
@@ -87,14 +88,13 @@ cl_program CreateProgram(const std::string& source, cl_context context)
 }
 
 
+using namespace std;
 int main()
 {
-	testBigUnsigned();
-	std::getchar();
-
+	//testBigUnsigned();
 
 	std::ofstream myfile;
-	myfile.open("example.txt");
+	myfile.open("output.txt");
 
 
 	//--------------------------------- GETTING PLATFORM IDS --------------------------------------
@@ -178,81 +178,77 @@ int main()
 #pragma endregion Creating_Command_Queue
 
 	//------------------------------------ CREATING PROGRAM ----------------------------------------
-#pragma region Creating_Program	
+#pragma region Creating_Programs	
 	myfile << "Creating a program kernel: ";
 	
 
 	std::vector<std::string> sources;
-
 	const int numFiles = 2;
 	std::vector<std::string> files;
 	files.push_back("bigint\\BigUnsigned.c");
 	files.push_back("kernels.cl");
 	std::vector<size_t> sourceLengths;
-
 	for (int i = 0; i < numFiles; ++i){
 		std::string k = LoadKernel(files[i].c_str());
 		sources.push_back(k);
 		sourceLengths.push_back((size_t)k.size());
 	}
-
 	std::vector<const char*> cstrings;
 	for (size_t i = 0; i < sources.size(); ++i)
 		cstrings.push_back(sources[i].data());
-
 	cl_program program = clCreateProgramWithSource(context, numFiles, &cstrings[0], &sourceLengths[0], &error);
-		//(LoadKernel("kernels.cl"), context);
-
 	checkBuildError(clBuildProgram(program, deviceIdCount, deviceIds.data(), nullptr, nullptr, nullptr), program, deviceIds[0]);
 
-
-	//Predication
+	
+	//Create Predication, Scan, & Compact kernels
 	cl_kernel predicateKernel = clCreateKernel(program, "Predicate", &error);
 	CheckError(error);
-	myfile << "SUCCESS" << std::endl;
-	//Scanning
 	cl_kernel scanKernel = clCreateKernel(program, "StreamScan", &error);
 	CheckError(error);
-	myfile << "SUCCESS" << std::endl;
-	//Sorting
-	cl_kernel sortKernel = clCreateKernel(program, "Sort", &error);
+	cl_kernel compactKernel = clCreateKernel(program, "BUCompact", &error);
 	CheckError(error);
-	myfile << "SUCCESS" << std::endl;
 
+	static const size_t numBits = 16;
+	static const size_t inputSize = 64;
+	static const size_t workgroupSize = 4;	
 
 	// Prepare some test data
-	myfile << "Preparing test data: ";
-	int numBits = 14;
-	static const size_t inputSize = 1 << numBits;//1 << numBits;
-	static const size_t workgroupSize = 1024;
-	std::vector<int> input(inputSize), intermediate(inputSize / workgroupSize), predicate(inputSize), address(inputSize), result(inputSize);
-	for (int i = 0; i < inputSize; ++i)
-		input[i] = static_cast<int> (inputSize - i);
-	for (int i = 0; i < inputSize / workgroupSize; ++i)
-		intermediate[i] = static_cast<int>(-1);
-	cl_mem inputBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize),
-		input.data(), &error);
-	cl_mem intermediateBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize / workgroupSize),
-		intermediate.data(), &error);
-	cl_mem lPredicateBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize),
-		predicate.data(), &error);
-	cl_mem rPredicateBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize),
-		predicate.data(), &error);
-	cl_mem leftBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize),
-		address.data(), &error);
-	cl_mem rightBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize),
-		address.data(), &error);
-	cl_mem resultBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-		sizeof (int)* (inputSize),
-		result.data(), &error);
+	std::vector<BigUnsigned> input(inputSize);
+	std::vector<Index> address(inputSize), intermediate(inputSize / workgroupSize), result(inputSize), predicate(inputSize);
+
+
+	/*for (int i = 0; i < inputSize; ++i) {
+		input[i] = createSBU(i);
+	}*/
+
+	//1.29.2016
+	int n = 3, c = 0;  //n is a limit for 255
+	
+	for (int j = 6; j >= 0; --j, n = 9){
+		for (int k = n; k >= 0; --k, ++c){
+			input[c] = createBU();
+			setBUBlock(&input[c], 0, k);
+			setBUBlock(&input[c], 1, j);
+		}
+	}
+
+
+	for (int i = 0; i < inputSize / workgroupSize; ++i) intermediate[i] = -1;
+
+	for (int i = 0; i < 64; ++i) {
+		cout << buToString(&input[i]) << endl;
+	}
+	cout << endl;
+
+	cl_mem inputBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof (BigUnsigned)* (inputSize), input.data(), &error);
+	cl_mem intermediateBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof (Index)* (inputSize / workgroupSize), intermediate.data(), &error);
+	cl_mem LPBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof (Index)* (inputSize), predicate.data(), &error);
+	cl_mem RPBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof (Index)* (inputSize), predicate.data(), &error);
+	cl_mem LABuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof (Index)* (inputSize), address.data(), &error);
+	cl_mem RABuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof (Index)* (inputSize), address.data(), &error);
+	cl_mem resultBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof (Index)* (inputSize), result.data(), &error);
 	CheckError(error);
-#pragma endregion Creating_Program
+#pragma endregion Creating_Programs
 
 	//----------------------------------- RADIX SORT ---------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clEnqueueNDRangeKernel.html
@@ -260,18 +256,19 @@ int main()
 	const size_t globalWorkSize[] = { inputSize, 0, 0 };
 	const size_t localWorkSize[] = { workgroupSize, 0, 0 };
 
+
 	//unsigned int index = 1;
-	int compared;
+	short compared;
 
 	auto t1 = std::chrono::high_resolution_clock::now();
 
-	for (int index = 0; index <= numBits; index++) {
+	for (Index index = 0; index < numBits; index++) {
 		//Predication
 		compared = 0;
 		clSetKernelArg(predicateKernel, 0, sizeof (cl_mem), &inputBuffer);
-		clSetKernelArg(predicateKernel, 1, sizeof (cl_mem), &lPredicateBuffer);
-		clSetKernelArg(predicateKernel, 2, sizeof (unsigned int), &index);
-		clSetKernelArg(predicateKernel, 3, sizeof (int), &compared);
+		clSetKernelArg(predicateKernel, 1, sizeof (cl_mem), &LPBuffer);
+		clSetKernelArg(predicateKernel, 2, sizeof (Index), &index);
+		clSetKernelArg(predicateKernel, 3, sizeof (short), &compared);
 		CheckError(clEnqueueNDRangeKernel(queue, predicateKernel, 1,
 			nullptr,
 			globalWorkSize,
@@ -279,94 +276,101 @@ int main()
 			0, nullptr, nullptr));
 		compared = 1;
 		clSetKernelArg(predicateKernel, 0, sizeof (cl_mem), &inputBuffer);
-		clSetKernelArg(predicateKernel, 1, sizeof (cl_mem), &rPredicateBuffer);
-		clSetKernelArg(predicateKernel, 2, sizeof (unsigned int), &index);
-		clSetKernelArg(predicateKernel, 3, sizeof (int), &compared);
+		clSetKernelArg(predicateKernel, 1, sizeof (cl_mem), &RPBuffer);
+		clSetKernelArg(predicateKernel, 2, sizeof (Index), &index);
+		clSetKernelArg(predicateKernel, 3, sizeof (short), &compared);
 		CheckError(clEnqueueNDRangeKernel(queue, predicateKernel, 1,
 			nullptr,
 			globalWorkSize,
 			localWorkSize,
 			0, nullptr, nullptr));
+		
+		
 		//Scanning
 		intermediateBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			sizeof (int)* (inputSize / workgroupSize),
+			sizeof (BigUnsigned)* (inputSize / workgroupSize),
 			intermediate.data(), &error);
-		clSetKernelArg(scanKernel, 0, sizeof (cl_mem), &lPredicateBuffer);
-		clSetKernelArg(scanKernel, 1, sizeof (cl_mem), &leftBuffer);
+		clSetKernelArg(scanKernel, 0, sizeof (cl_mem), &LPBuffer);
+		clSetKernelArg(scanKernel, 1, sizeof (cl_mem), &LABuffer);
 		clSetKernelArg(scanKernel, 2, sizeof (cl_mem), &intermediateBuffer);
-		clSetKernelArg(scanKernel, 3, workgroupSize * sizeof(cl_int), NULL);
-		clSetKernelArg(scanKernel, 4, workgroupSize * sizeof(cl_int), NULL);
+		clSetKernelArg(scanKernel, 3, workgroupSize * sizeof(Index), NULL);
+		clSetKernelArg(scanKernel, 4, workgroupSize * sizeof(Index), NULL);
 		CheckError(clEnqueueNDRangeKernel(queue, scanKernel, 1,
 			nullptr,
 			globalWorkSize,
 			localWorkSize,
 			0, nullptr, nullptr));
+
 		intermediateBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			sizeof (int)* (inputSize / workgroupSize),
+			sizeof (BigUnsigned)* (inputSize / workgroupSize),
 			intermediate.data(), &error);
-		clSetKernelArg(scanKernel, 0, sizeof (cl_mem), &rPredicateBuffer);
-		clSetKernelArg(scanKernel, 1, sizeof (cl_mem), &rightBuffer);
+		clSetKernelArg(scanKernel, 0, sizeof (cl_mem), &RPBuffer);
+		clSetKernelArg(scanKernel, 1, sizeof (cl_mem), &RABuffer);
 		clSetKernelArg(scanKernel, 2, sizeof (cl_mem), &intermediateBuffer);
-		clSetKernelArg(scanKernel, 3, workgroupSize * sizeof(cl_int), NULL);
-		clSetKernelArg(scanKernel, 4, workgroupSize * sizeof(cl_int), NULL);
+		clSetKernelArg(scanKernel, 3, workgroupSize * sizeof(Index), NULL);
+		clSetKernelArg(scanKernel, 4, workgroupSize * sizeof(Index), NULL);
 		CheckError(clEnqueueNDRangeKernel(queue, scanKernel, 1,
 			nullptr,
 			globalWorkSize,
 			localWorkSize,
 			0, nullptr, nullptr));
+		
 		//Sorting
-		clSetKernelArg(sortKernel, 0, sizeof (cl_mem), &inputBuffer);
-		clSetKernelArg(sortKernel, 1, sizeof (cl_mem), &lPredicateBuffer);
-		clSetKernelArg(sortKernel, 2, sizeof (cl_mem), &leftBuffer);
-		clSetKernelArg(sortKernel, 3, sizeof (cl_mem), &rightBuffer);
-		clSetKernelArg(sortKernel, 4, sizeof (unsigned int), &inputSize);
-		CheckError(clEnqueueNDRangeKernel(queue, sortKernel, 1,
+		clSetKernelArg(compactKernel, 0, sizeof (cl_mem), &inputBuffer);
+		clSetKernelArg(compactKernel, 1, sizeof (cl_mem), &LPBuffer);
+		clSetKernelArg(compactKernel, 2, sizeof (cl_mem), &LABuffer);
+		clSetKernelArg(compactKernel, 3, sizeof (cl_mem), &RABuffer);
+		clSetKernelArg(compactKernel, 4, sizeof (Index), &inputSize);
+		CheckError(clEnqueueNDRangeKernel(queue, compactKernel, 1,
 			nullptr,
 			globalWorkSize,
 			localWorkSize,
 			0, nullptr, nullptr));
 		clWaitForEvents(1, nullptr);
+		
+		
+		
 	}
-
-	CheckError(clEnqueueReadBuffer(queue, inputBuffer, CL_TRUE, 0,
-		inputSize * sizeof (int),
-		result.data(),
-		0, nullptr, nullptr));
-	for (int i = 0; i < inputSize; ++i){
-		//std::cout << (std::bitset< 16 >(result[i])) << std::endl;
-		std::cout << (std::to_string(result[i])) << std::endl;
-	}
-
 	auto t2 = std::chrono::high_resolution_clock::now();
+	CheckError(clEnqueueReadBuffer(queue, inputBuffer, CL_TRUE, 0,
+		inputSize * sizeof (BigUnsigned),
+		input.data(),
+		0, nullptr, nullptr));
 
+	for (int i = 0; i < inputSize; ++i){
+		std::cout << buToString(&input[i]) << std::endl;
+	}
+	getchar();
+	
 #pragma endregion Defining_Dimension
 
 
 	//----------------------------------- RETRIEVING RESULTS ---------------------------------------
 	// http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clEnqueueReadBuffer.html
 #pragma region Retrieving_Result
-	CheckError(clEnqueueReadBuffer(queue, inputBuffer, CL_TRUE, 0,
-		inputSize * sizeof (int),
+	/*CheckError(clEnqueueReadBuffer(queue, inputBuffer, CL_TRUE, 0,
+		inputSize * sizeof (unsigned int),
 		result.data(),
 		0, nullptr, nullptr));
 
-	myfile << "\nResult:" << std::endl;
+	myfile << "\nResult:" << std::endl;*/
 
 	/*for (int i = 0; i < inputSize; ++i){
-	myfile << (std::to_string(result[i])) << std::endl;
+		std::cout << result[i] << std::endl;
 	}*/
 
-	auto diff = t2 - t1;
+
+	/*auto diff = t2 - t1;
 	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
 
-	myfile << "Parallel radix takes " << (ms.count()) << " milliseconds" << std::endl;
+	myfile << "Parallel radix takes " << (ms.count()) << " milliseconds" << std::endl;*/
 #pragma endregion Retrieving_Results
 
 	clReleaseCommandQueue(queue);
-	clReleaseMemObject(leftBuffer);
-	clReleaseMemObject(rightBuffer);
-	clReleaseMemObject(lPredicateBuffer);
-	clReleaseMemObject(rPredicateBuffer);
+	clReleaseMemObject(LABuffer);
+	clReleaseMemObject(RABuffer);
+	clReleaseMemObject(LPBuffer);
+	clReleaseMemObject(RPBuffer);
 	clReleaseMemObject(inputBuffer);
 	clReleaseMemObject(intermediateBuffer);
 	clReleaseKernel(scanKernel);
