@@ -44,19 +44,14 @@ void CLWrapper::envokeRadixSortRoutine(const Index numBits){
   for (Index index = 0; index < numBits; index++) {
     //Predicate the 0's and 1's
     kernelBox->predicate(buffers[0], buffers[1], index, 0, globalSize, localSize);
-    clFinish(queue);
     kernelBox->predicate(buffers[0], buffers[2], index, 1, globalSize, localSize);
 
-    clFinish(queue);
     //Scan the predication buffers.
     kernelBox->streamScan(buffers[1], intermediateBuffer, buffers[3], globalSize, localSize);
-    clFinish(queue);
     kernelBox->streamScan(buffers[2], intermediateBuffer, buffers[4], globalSize, localSize);
-    clFinish(queue);
-
+    
     //Compacting
     kernelBox->doubleCompact(buffers[0], buffers[5], buffers[1], buffers[3], buffers[4], globalSize, localSize);
-    clFinish(queue);
 
     //Swap result with input.
     cl_mem temp = buffers[0];

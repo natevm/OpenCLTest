@@ -29,7 +29,7 @@ int main()
   //testBigUnsigned();
 
 	// Initialize OpenCL
-  int numBits = 8;
+  int numBits = 22;
   long numElements = 1 << numBits;
   CLWrapper CL(numElements, 256);
 
@@ -40,9 +40,9 @@ int main()
   std::random_shuffle(input.begin(), input.end());
 
   cout << "Unsorted" << endl;
-  for (int i = 0; i < numElements; ++i){
-   cout << buToString(input[i]) << endl;
-  }
+  //for (int i = 0; i < numElements; ++i){
+  // cout << buToString(input[i]) << endl;
+ // }
 
   //Sort them.
 	CL.RadixSort(input, 32);
