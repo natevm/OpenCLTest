@@ -1,635 +1,454 @@
 #ifndef BIGUNSIGNED_C
 #define BIGUNSIGNED_C
-#define BIG_INTEGER_STATIC
-#define BIG_INTEGER_SIZE 2
+#define BIG_INTEGER_SIZE 54
 
-typedef unsigned int Index; // Type for the index of a block in the array
-typedef unsigned char Blk;  // Type for the blocks 
-
+  typedef int Index; // Type for the index of a block in the array
+  typedef unsigned char Blk;  // Type for the blocks 
 #ifndef __cplusplus
-  #if __STDC_VERSION__ < 199901L
-	typedef int bool;
-	#define true 1
-	#define false 0
-  #endif
+
+#if __STDC_VERSION__ < 199901L
+  typedef unsigned char bool;
+#define true 1
+#define false 0
+#endif
 #endif
 
-// Make sure we have NULL.
+  // Make sure we have NULL.
 #ifndef NULL
-  #define NULL 0
+#define NULL 0
 #endif
 
-// Number of bits in a block.
+  // Number of bits in a block.
 #if defined(__OPENCL_VERSION__)
-	__constant unsigned int numBUBits = 8 * sizeof(Blk);
+  __constant unsigned int numBUBits = 8 * sizeof(Blk);
 #else
-	const unsigned int numBUBits = 8 * sizeof(Blk);
-#endif
-	
-
-// struct BigUnsigned allows storing integers larger than a long using an array of blk.
-struct BigUnsigned {
-  //~~ NumberlikeArray Fields ~~//
-  Index cap;                                      // Current allocated capacity (in blocks)
-  Index len;                                      // Actual length of the value stored (in blocks)
-  bool isNULL;
-  #ifdef BIG_INTEGER_STATIC                       // Heap-allocated array of the blocks (can be NULL if len == 0)
-	Blk blk[BIG_INTEGER_SIZE];
-  #else
-	Blk *blk;
-  #endif
-  //~~ BigUnsigned Fields  ~~//
-};
-
-//~~HELPER FUNCTIONS~~//
-// Decreases len to eliminate any leading zero blocks.
-void zapLeadingZeros(struct BigUnsigned * bu) {
-  while (bu->len > 0 && bu->blk[bu->len - 1] == 0)
-    bu->len--;
-}
-int isBUZero(struct BigUnsigned *bu) { return bu->len == 0; }
-void allocateBU(struct BigUnsigned *bu, Index c) {
-  // If the requested capacity is more than the current capacity...
-  #ifdef BIG_INTEGER_STATIC
-    //if (c > BIG_INTEGER_SIZE) throw std::logic_error("BIG_INTEGER_SIZE too small");
-  #endif
-
-  if (c > bu->cap) {
-    // Delete the old number array
-    #ifndef BIG_INTEGER_STATIC
-      delete [] bu->blk;
-    #endif
-      // Allocate the new array
-      bu->cap = c;
-    #ifndef BIG_INTEGER_STATIC
-      bu->blk = new Blk[bu->cap];
-    #endif
-  }
-}
-void allocateBUAndCopy(struct BigUnsigned *x, Index c) {
-	// If the requested capacity is more than the current capacity...
-#ifdef BIG_INTEGER_STATIC
-	//if (c > BIG_INTEGER_SIZE) throw std::logic_error("BIG_INTEGER_SIZE too small");
+  unsigned int numBUBits = 8 * sizeof(Blk);
 #endif
 
-	if (c > x->cap) {
-		Blk *oldBlk = x->blk;
-		// Allocate the new number array
-		x->cap = c;
-#ifndef BIG_INTEGER_STATIC
-		x.blk = new Blk[x.cap];
-		// Copy number blocks
-		Index i;
-		for (i = 0; i < x.len; i++)
-			x.blk[i] = oldBlk[i];
-		// Delete the old array
-		delete[] oldBlk;
-#endif
-	}
-}
+  // BigUnsigned allows storing integers larger than a long using an array of blk.
+  typedef struct {
+    Index cap;                                      // Current allocated capacity (in blocks)
+    Index len;                                      // Actual length of the value stored (in blocks)
+    bool isNULL;
+    Blk blk[BIG_INTEGER_SIZE];
+  } BigUnsigned;
 
-//~~CONSTRUCTORS~~//
-struct BigUnsigned createBUBU(struct BigUnsigned *x) {
-  struct BigUnsigned bu;
-  bu.isNULL = x->isNULL;
-  bu.len = x->len;
-  // Create array
-  bu.cap = x->len;
-  #ifndef BIG_INTEGER_STATIC
-    bu.blk = new Blk[x.cap];
-  #endif
-  // Copy blocks
-  Index i;
-  for (i = 0; i < x->len; i++)
-	  bu.blk[i] = x->blk[i];
-  return bu;
-}
-struct BigUnsigned createBU(){
-  struct BigUnsigned bu;
-  bu.isNULL = false;
-  bu.cap = 0;
-  bu.len = 0;
-  #ifndef BIG_INTEGER_STATIC
-    bu.blk = NULL;
-  #endif
-  return bu;
-}
-struct BigUnsigned createULBU(unsigned long x) {
-  struct BigUnsigned bu;
-  if (x == 0)
-      return createBU();
-  else {
-	  bu.isNULL = false;
-    bu.cap = 1;
-    #ifndef BIG_INTEGER_STATIC
-        bu.blk = new Blk[1];
-    #endif
-    bu.len = 1;
-	Blk b = x;
-    bu.blk[0] = b;
-  }
-  return bu;
-}
-struct BigUnsigned createUIBU(unsigned int x) {
-  struct BigUnsigned bu;
-  if (x == 0)
-    return createBU();
-  else {
-	  bu.isNULL = false;
-    bu.cap = 1;
-    #ifndef BIG_INTEGER_STATIC
-        bu.blk = new Blk[1];
-    #endif
-    bu.len = 1;
-	Blk b = x;
-    bu.blk[0] = b;
-  }
-  return bu;
-}
-struct BigUnsigned createUSBU(unsigned short x) {
-  struct BigUnsigned bu;
-  if (x == 0)
-    return createBU();
-  else {
-	  bu.isNULL = false;
-    bu.cap = 1;
-    #ifndef BIG_INTEGER_STATIC
-        bu.blk = new Blk[1];
-    #endif
-    bu.len = 1;
-	Blk b = x;
-    bu.blk[0] = b;
-  }
-  return bu;
-}
-struct BigUnsigned createLBU(long x) {
-  //if (x < 0)
-  //  throw "BigUnsigned constructor: "
-  //      "Cannot construct a BigUnsigned from a negative number";
-  if (x >=0) {
-    struct BigUnsigned bu;
-    if (x == 0)
-      return createBU();
-    else {
-		bu.isNULL = false;
-      bu.cap = 1;
-      #ifndef BIG_INTEGER_STATIC
-          bu.blk = new Blk[1];
-      #endif
-      bu.len = 1;
-	  Blk b = x;
-      bu.blk[0] = b;
+  //~~HELPER FUNCTIONS~~//
+  // Decreases len to eliminate any leading zero blocks.
+  void zapLeadingZeros(BigUnsigned * bu) {
+    while (bu->len > 0 && bu->blk[bu->len - 1] == 0) {
+      bu->len--;
     }
-    return bu;
   }
-}
-struct BigUnsigned createIBU(int x) {
-  //if (x < 0)
-  //  throw "BigUnsigned constructor: "
-  //    "Cannot construct a BigUnsigned from a negative number";
-  if (x>=0) {
-    struct BigUnsigned bu;
-    if (x == 0)
-      return createBU();
-    else {
-		bu.isNULL = false;
-      bu.cap = 1;
-      #ifndef BIG_INTEGER_STATIC
-          bu.blk = new Blk[1];
-      #endif
-      bu.len = 1;
-	  Blk b = x;
-      bu.blk[0] = b;
-    }
-    return bu;
+  int isBUZero(BigUnsigned *bu) {
+    return bu->len == 0;
   }
-}
-struct BigUnsigned createSBU(short x) {
-  //if (x < 0)
-  //  throw "BigUnsigned constructor: "
-  //      "Cannot construct a BigUnsigned from a negative number";
-  if (x>=0) {
-    struct BigUnsigned bu;
-    if (x == 0)
-      return createBU();
-    else {
-		bu.isNULL = false;
-      bu.cap = 1;
-      #ifndef BIG_INTEGER_STATIC
-          bu.blk = new Blk[1];
-      #endif
-      bu.len = 1;
-	  Blk b = x;
-      bu.blk[0] = b;
-    }
-    return bu;
-  }
-}
-struct BigUnsigned createIMorton(int x) {
-	return createIBU(x);
-}
-struct BigUnsigned createUIMorton(unsigned int x) {
-	return createUIBU(x);
-}
-struct BigUnsigned createNULLBU(){
-	struct BigUnsigned bu = createBU();
-	bu.isNULL = true;
-	return bu;
-}
 
-//~~CONVERSIONS~~//
-unsigned long buToULong(struct BigUnsigned *bu) {
-  if (bu->len == 0)
-    return 0; // The number is zero; return zero.
-  else if (bu->len == 1) {
-	  unsigned long ul = bu->blk[0];
-    unsigned long x = ul; // The single block might fit in an X.  Try the conversion.
-	Blk b = x;
-	if (b == bu->blk[0]) // Make sure the result accurately represents the block.
-      return x; // Successful conversion.
-  }// Otherwise fall through.
-  //throw "BigUnsigned to unsigned long : "
-  //    "Value is too big to fit in the requested type";
-}
-unsigned int buToUInt(struct BigUnsigned *bu) {
-  if (bu->len == 0)
-    return 0; // The number is zero; return zero.
-  else if (bu->len == 1) {
-	  unsigned int ui = bu->blk[0];
-    unsigned int x = ui; // The single block might fit in an X.  Try the conversion.
-	Blk b = x;
-	if (b == bu->blk[0]) // Make sure the result accurately represents the block.
-      return x; // Successful conversion.
-  }// Otherwise fall through.
-  //throw "BigUnsigned to unsigned int : "
-  //    "Value is too big to fit in the requested type";
-}
-unsigned short buToUShort(struct BigUnsigned *bu) {
-  if (bu->len == 0)
-    return 0; // The number is zero; return zero.
-  else if (bu->len == 1) {
-	  unsigned short us = bu->blk[0];
-    unsigned short x = us; // The single block might fit in an X.  Try the conversion.
-	Blk b = x;
-    if (b == bu->blk[0]) // Make sure the result accurately represents the block.
-      return x; // Successful conversion.
-  }// Otherwise fall through.
-  //throw "BigUnsigned to unsigned short : "
-  //    "Value is too big to fit in the requested type";
-}
-long buToLong(struct BigUnsigned *bu) {
-  long x = buToULong(bu);
-  if (x >= 0)
-    return x;
-  //else
-  //  throw "BigUnsigned to long : "
-  //      "Value is too big to fit in the requested type";
-}
-int buToInt(struct BigUnsigned *bu) {
-  int x = buToUInt(bu);
-  if (x >= 0)
-    return x;
-  //else
-  //  throw "BigUnsigned to int : "
-  //      "Value is too big to fit in the requested type";
-}
-short buToShort(struct BigUnsigned *bu) {
-  short x = buToUShort(bu);
-  if (x >= 0)
-    return x;
-  //else
-  //  throw "BigUnsigned to short : "
-  //      "Value is too big to fit in the requested type";
-}
-
-#ifdef __cplusplus
-
-#include <string>
-std::string buToString(struct BigUnsigned *bu) {
-	std::string representation = "";
-	if (bu->len == 0)
-	{
-		representation += "[0]";
-	}
-	else {
-		for (int i = bu->len; i > 0; --i) {
-			representation += "[" + std::to_string(bu->blk[i - 1]) + "]";
-		}
-	}
-
-	return representation;
-}
-#endif
-
-//~~BIT/BLOCK ACCESSORS~~//
-Blk getBUBlock(struct BigUnsigned *bu, Index i){
-  return i >= bu->len ? 0 : bu->blk[i];
-}
-void setBUBlock(struct BigUnsigned *bu, Index i, Blk newBlock) {
-  if (newBlock == 0) {
-    if (i < bu->len) {
-      bu->blk[i] = 0;
-      zapLeadingZeros(bu);
-    }                       // If i >= len, no effect.
-  } else {
-    if (i >= bu->len) {      // The nonzero block extends the number.
-      allocateBUAndCopy(bu, i+1);// Zero any added blocks that we aren't setting.
-      for (Index j = bu->len; j < i; j++)
-        bu->blk[j] = 0;
-      bu->len = i+1;
-    }
-    bu->blk[i] = newBlock;
-  }
-}
-Blk getShiftedBUBlock(struct BigUnsigned *num, Index x, unsigned int y) {
-	Blk part1 = (x == 0 || y == 0) ? 0 : (num->blk[x - 1] >> (numBUBits - y));
-	Blk part2 = (x == num->len) ? 0 : (num->blk[x] << y);
-  return part1 | part2;
-}
-Index getBUBitLength(struct BigUnsigned *bu) {
-  if (isBUZero(bu))
+  //~~INITIALIZERS~~//
+  int initBUBU(BigUnsigned *result, BigUnsigned *x) {
+    if (!result || !x)
+      return -1;
+    result->isNULL = x->isNULL;
+    result->len = x->len;
+    result->cap = x->cap;
+    for (Index i = 0; i < x->len; i++)
+      result->blk[i] = x->blk[i];
     return 0;
-  else {
-    Blk leftmostBlock = getBUBlock(bu, bu->len - 1);
-    Index leftmostBlockLen = 0;
-    while (leftmostBlock != 0) {
-      leftmostBlock >>= 1;
-      leftmostBlockLen++;
-    }
-	return leftmostBlockLen + (bu->len - 1) * numBUBits;
   }
-}
-bool getBUBit(struct BigUnsigned *bu, Index bi) {
-	Blk b = 1;
-	return (getBUBlock(bu, bi / numBUBits) & (b << (bi % numBUBits))) != 0;
-}
-void setBUBit(struct BigUnsigned *bu, Index bi, bool newBit) {
-  Index blockI = bi / numBUBits;
-  Blk b = 1;
-  Blk block = getBUBlock(bu, blockI), mask = b << (bi % numBUBits);
-  block = newBit ? (block | mask) : (block & ~mask);
-  setBUBlock(bu, blockI, block);
-}
-
-//~~COMPARISON~~//
-int compareBU(struct BigUnsigned *x, struct BigUnsigned *y) {
-  // A bigger length implies a bigger number.
-	if (x->len < y->len)
-    return -1;
-	/*CmpRes x = less;*/
-	else if (x->len > y->len)
-    return 1;
-  else {
-    // Compare blocks one by one from left to right.
-	  Index i = x->len;
-    while (i > 0) {
-      i--;
-	  if (x->blk[i] == y->blk[i])
-		  continue;
-	  else if (x->blk[i] > y->blk[i])
-		  return 1;
+  int initBU(BigUnsigned *result){
+    if (!result){
+      return -1;
+    }
+    result->isNULL = false;
+    result->cap = 0;
+    result->len = 0;
+    return 0;
+  }
+  int initBlkBU(BigUnsigned *result, Blk x) {
+    if (x < 0){
+      return -1;
+    }
+    else {
+      if (x == 0)
+        return initBU(result);
+      else {
+        result->isNULL = false;
+        result->cap = 1;
+        result->len = 1;
+        result->blk[0] = x;
+        return 0;
+      }
+    }
+  }
+  //ASSUMES sizeof Blk = sizeof unsigned char!!!
+  int initLongLongBU(BigUnsigned *result, long long x){
+    if (x < 0){
+      return -1;
+    }
+    else {
+      if (x == 0)
+        return initBU(result);
+      else {
+        result->isNULL = false;
+        result->cap = 8;
+        result->len = 8;
+        for (int i = 0; i < 8; ++i){
+          result->blk[i] = x;
+          x = x>>8;
+        }
+        zapLeadingZeros(result);
+        return 0;
+      }
+    }
+  }
+  int initMorton(BigUnsigned *result, Blk x) {
+    return initBlkBU(result, x);
+  }
+  int initNULLBU(BigUnsigned *result){
+    if (!result)
+      return -1;
+    else {
+      int error = initBU(result);
+      if (!error) {
+        result->isNULL = true;
+        return 0;
+      }
       else
-        return -1;
+        return error;
     }
-    // If no blocks differed, the numbers are equal.
+  }
+
+  void allocateBUAndCopy(BigUnsigned *x, Index c) {
+    // If the requested capacity is more than the current capacity...
+#ifdef BIG_INTEGER_STATIC
+    //if (c > BIG_INTEGER_SIZE) throw std::logic_error("BIG_INTEGER_SIZE too small");
+#endif
+
+    if (c > x->cap) {
+      Blk *oldBlk = x->blk;
+      // Allocate the new number array
+      x->cap = c;
+    }
+  }
+
+  //~~BIT/BLOCK ACCESSORS~~//
+  int getBUBlock(BigUnsigned *bu, Index i){
+    return i >= bu->len ? 0 : bu->blk[i];
+  }
+  void setBUBlock(BigUnsigned *bu, Index i, Blk newBlock) {
+    if (newBlock == 0) {
+      if (i < bu->len) {
+        bu->blk[i] = 0;
+        zapLeadingZeros(bu);
+      }                       // If i >= len, no effect.
+    }
+    else {
+      if (i >= bu->len) {      // The nonzero block extends the number.
+        for (Index j = bu->len; j < i; j++)
+          bu->blk[j] = 0;
+        bu->len = i + 1;
+      }
+      bu->blk[i] = newBlock;
+    }
+  }
+  int getShiftedBUBlock(BigUnsigned *num, Index x, unsigned int y) {
+    Blk part1 = (x == 0 || y == 0) ? 0 : (num->blk[x - 1] >> (numBUBits - y));
+    Blk part2 = (x == num->len) ? 0 : (num->blk[x] << y);
+    return part1 | part2;
+  }
+  int getBUBitLength(BigUnsigned *bu) {
+    if (isBUZero(bu))
+      return 0;
+    else {
+      Blk leftmostBlock = getBUBlock(bu, bu->len - 1);
+      Index leftmostBlockLen = 0;
+      while (leftmostBlock != 0) {
+        leftmostBlock >>= 1;
+        leftmostBlockLen++;
+      }
+      return leftmostBlockLen + (bu->len - 1) * numBUBits;
+    }
+  }
+  int getBUBit(BigUnsigned *bu, Index bi) {
+    Blk b = 1;
+    return (getBUBlock(bu, bi / numBUBits) & (b << (bi % numBUBits))) != 0;
+  }
+  void setBUBit(BigUnsigned *bu, Index bi, bool newBit) {
+    Index blockI = bi / numBUBits;
+    Blk b = 1;
+    Blk block = getBUBlock(bu, blockI), mask = b << (bi % numBUBits);
+    block = newBit ? (block | mask) : (block & ~mask);
+    setBUBlock(bu, blockI, block);
+  }
+
+  //~~COMPARISON~~//
+  int compareBU(BigUnsigned *x, BigUnsigned *y) {
+    // A bigger length implies a bigger number.
+    if (x->len < y->len)
+      return -1;
+    /*CmpRes x = less;*/
+    else if (x->len > y->len)
+      return 1;
+    else {
+      // Compare blocks one by one from left to right.
+      Index i = x->len;
+      while (i > 0) {
+        i--;
+        if (x->blk[i] == y->blk[i])
+          continue;
+        else if (x->blk[i] > y->blk[i])
+          return 1;
+        else
+          return -1;
+      }
+      // If no blocks differed, the numbers are equal.
+      return 0;
+    }
+  }
+
+  //~~ARITHMATIC OPERATIONS~~//
+  int addBU(BigUnsigned *result, BigUnsigned *a, BigUnsigned *b) {
+    if (!result || !a || !b)
+      return -1;
+    if (a->len == 0) {
+      return initBUBU(result, b); //Copy B, return that.
+    }
+    else if (b->len == 0) {
+      return initBUBU(result, a); //Copy A, return that.
+    }
+
+    // Some variables...
+    // Carries in and out of an addition stage
+    bool carryIn, carryOut;
+    Blk temp;
+    Index i;
+    // a2 points to the longer input, b2 points to the shorter
+    const BigUnsigned *a2, *b2;
+    if (a->len >= b->len) {
+      a2 = a;
+      b2 = b;
+    }
+    else {
+      a2 = b;
+      b2 = a;
+    }
+    // Set prelimiary length and make room in this BigUnsigned
+    result->len = a2->len + 1;
+    // For each block index that is present in both inputs...
+    for (i = 0, carryIn = false; i < b2->len; i++) {
+      // Add input blocks
+      temp = a2->blk[i] + b2->blk[i];
+      // If a rollover occurred, the result is less than either input.
+      // This test is used many times in the BigUnsigned code.
+      carryOut = (temp < a2->blk[i]);
+      // If a carry was input, handle it
+      if (carryIn) {
+        temp++;
+        carryOut |= (temp == 0);
+      }
+      result->blk[i] = temp; // Save the addition result
+      carryIn = carryOut; // Pass the carry along
+    }
+    // If there is a carry left over, increase blocks until
+    // one does not roll over.
+    for (; i < a2->len && carryIn; i++) {
+      temp = a2->blk[i] + 1;
+      carryIn = (temp == 0);
+      result->blk[i] = temp;
+    }
+    // If the carry was resolved but the larger number
+    // still has blocks, copy them over.
+    for (; i < a2->len; i++)
+      result->blk[i] = a2->blk[i];
+    // Set the extra block if there's still a carry, decrease length otherwise
+    if (carryIn)
+      result->blk[i] = 1;
+    else
+      result->len--;
     return 0;
   }
-}
-
-//~~ARITHMATIC OPERATIONS~~//
-struct BigUnsigned addBU(struct BigUnsigned *a, struct BigUnsigned *b) {
-  //DTRT_ALIASED(this == &a || this == &b, add(a, b));
-  // If one argument is zero, copy the other.
-  if (a->len == 0) {
-    return createBUBU(b); //Copy B, return that.
-  } else if (b->len == 0) {
-    return createBUBU(a); //Copy A, return that.
-  }
-
-  // Some variables...
-  // Carries in and out of an addition stage
-  bool carryIn, carryOut;
-  Blk temp;
-  Index i;
-  // a2 points to the longer input, b2 points to the shorter
-  const struct BigUnsigned *a2, *b2;
-  struct BigUnsigned result;
-  if (a->len >= b->len) {
-    a2 = a;
-    b2 = b;
-  } else {
-    a2 = b;
-    b2 = a;
-  }
-  // Set prelimiary length and make room in this BigUnsigned
-  result.len = a2->len + 1;
-  allocateBU(&result, result.len);
-  // For each block index that is present in both inputs...
-  for (i = 0, carryIn = false; i < b2->len; i++) {
-    // Add input blocks
-    temp = a2->blk[i] + b2->blk[i];
-    // If a rollover occurred, the result is less than either input.
-    // This test is used many times in the BigUnsigned code.
-    carryOut = (temp < a2->blk[i]);
-    // If a carry was input, handle it
-    if (carryIn) {
-      temp++;
-      carryOut |= (temp == 0);
+  int subtractBU(BigUnsigned *result, BigUnsigned *a, BigUnsigned *b) {
+    if (!result || !a || !b)
+      return -1;
+    if (b->len == 0) {
+      // If b is zero, copy a.
+      return initBUBU(result, a);
     }
-    result.blk[i] = temp; // Save the addition result
-    carryIn = carryOut; // Pass the carry along
-  }
-  // If there is a carry left over, increase blocks until
-  // one does not roll over.
-  for (; i < a2->len && carryIn; i++) {
-    temp = a2->blk[i] + 1;
-    carryIn = (temp == 0);
-    result.blk[i] = temp;
-  }
-  // If the carry was resolved but the larger number
-  // still has blocks, copy them over.
-  for (; i < a2->len; i++)
-    result.blk[i] = a2->blk[i];
-  // Set the extra block if there's still a carry, decrease length otherwise
-  if (carryIn)
-    result.blk[i] = 1;
-  else
-    result.len--;
-  return result;
-}
-struct BigUnsigned subtractBU(struct BigUnsigned *a, struct BigUnsigned *b) {
-  //DTRT_ALIASED(this == &a || this == &b, subtract(a, b));
-  if (b->len == 0) {
-    // If b is zero, copy a.
-	 return createBUBU(a);
-  }
- //else if (a->len < b->len)
- // // If a is shorter than b, the result is negative.
- // throw "BigUnsigned::subtract: "
- //   "Negative result in unsigned calculation";
-  // Some variables...
-  bool borrowIn, borrowOut;
-  Blk temp;
-  Index i;
-  struct BigUnsigned result;
-  // Set preliminary length and make room
-  result.len = a->len;
-  allocateBU(&result, result.len);
-  // For each block index that is present in both inputs...
-  for (i = 0, borrowIn = false; i < b->len; i++) {
-    temp = a->blk[i] - b->blk[i];
-    // If a reverse rollover occurred,
-    // the result is greater than the block from a.
-    borrowOut = (temp > a->blk[i]);
-    // Handle an incoming borrow
+    //else if (a->len < b->len)
+    // // If a is shorter than b, the result is negative.
+    // throw "BigUnsigned::subtract: "
+    //   "Negative result in unsigned calculation";
+    // Some variables...
+    bool borrowIn, borrowOut;
+    Blk temp;
+    Index i;
+    // Set preliminary length and make room
+    result->len = a->len;
+    // For each block index that is present in both inputs...
+    for (i = 0, borrowIn = false; i < b->len; i++) {
+      temp = a->blk[i] - b->blk[i];
+      // If a reverse rollover occurred,
+      // the result is greater than the block from a.
+      borrowOut = (temp > a->blk[i]);
+      // Handle an incoming borrow
+      if (borrowIn) {
+        borrowOut |= (temp == 0);
+        temp--;
+      }
+      result->blk[i] = temp; // Save the subtraction result
+      borrowIn = borrowOut; // Pass the borrow along
+    }
+    // If there is a borrow left over, decrease blocks until
+    // one does not reverse rollover.
+    for (; i < a->len && borrowIn; i++) {
+      borrowIn = (a->blk[i] == 0);
+      result->blk[i] = a->blk[i] - 1;
+    }
+    /* If there's still a borrow, the result is negative.
+     * Throw an exception, but zero out this object so as to leave it in a
+     * predictable state. */
     if (borrowIn) {
-      borrowOut |= (temp == 0);
-      temp--;
+      result->len = 0;
+      //throw "BigUnsigned::subtract: Negative result in unsigned calculation";
     }
-    result.blk[i] = temp; // Save the subtraction result
-    borrowIn = borrowOut; // Pass the borrow along
-  }
-  // If there is a borrow left over, decrease blocks until
-  // one does not reverse rollover.
-  for (; i < a->len && borrowIn; i++) {
-    borrowIn = (a->blk[i] == 0);
-    result.blk[i] = a->blk[i] - 1;
-  }
-  /* If there's still a borrow, the result is negative.
-   * Throw an exception, but zero out this object so as to leave it in a
-   * predictable state. */
-  if (borrowIn) {
-    result.len = 0;
-    //throw "BigUnsigned::subtract: Negative result in unsigned calculation";
-  } else
-    // Copy over the rest of the blocks
+    else
+      // Copy over the rest of the blocks
     for (; i < a->len; i++)
-      result.blk[i] = a->blk[i];
-  // Zap leading zeros
-  zapLeadingZeros(&result);
-  return result;
-}
+      result->blk[i] = a->blk[i];
+    // Zap leading zeros
+    zapLeadingZeros(result);
+    return 0;
+  }
+  int addIBU(BigUnsigned *result, BigUnsigned *a, Blk b){
+    BigUnsigned temp = { 0 };
+    initBlkBU(&temp, b);
+    return addBU(result, a, &temp);
+  }
+  int subtractIBU(BigUnsigned *result, BigUnsigned *a, Blk b){
+    BigUnsigned temp = { 0 };
+    initBlkBU(&temp, b);
+    return subtractBU(result, a, &temp);
+  }
 
-//~~BITWISE OPERATORS~~//
-/* These are straightforward blockwise operations except that they differ in
- * the output length and the necessity of zapLeadingZeros. */
-struct BigUnsigned andBU(struct BigUnsigned *a, struct BigUnsigned *b) {
-  //DTRT_ALIASED(this == &a || this == &b, bitAnd(a, b));
-  struct BigUnsigned result = createBU();
-  // The bitwise & can't be longer than either operand.
-  result.len = (a->len >= b->len) ? b->len : a->len;
-  allocateBU(&result, result.len);
-  Index i;
-  for (i = 0; i < result.len; i++)
-	  result.blk[i] = a->blk[i] & b->blk[i];
-  zapLeadingZeros(&result);
-  return result;
-}
-struct BigUnsigned orBU(struct BigUnsigned *a, struct BigUnsigned *b) {
-  //DTRT_ALIASED(this == &a || this == &b, bitOr(a, b));
-  struct BigUnsigned result;
-  Index i;
-  struct BigUnsigned *a2, *b2;
-  if (a->len >= b->len) {
-    a2 = a;
-    b2 = b;
-  } else {
-    a2 = b;
-    b2 = a;
+  //~~BITWISE OPERATORS~~//
+  /* These are straightforward blockwise operations except that they differ in
+   * the output length and the necessity of zapLeadingZeros. */
+  int andBU(BigUnsigned *result, BigUnsigned *a, BigUnsigned *b) {
+    if (!result || !a || !b)
+      return -1;
+    initBU(result);
+    // The bitwise & can't be longer than either operand.
+    result->len = (a->len >= b->len) ? b->len : a->len;
+    for (Index i = 0; i < result->len; i++)
+      result->blk[i] = a->blk[i] & b->blk[i];
+    zapLeadingZeros(result);
+    return 0;
   }
-  allocateBU(&result, a2->len);
-  for (i = 0; i < b2->len; i++)
-    result.blk[i] = a2->blk[i] | b2->blk[i];
-  for (; i < a2->len; i++)
-    result.blk[i] = a2->blk[i];
-  result.len = a2->len;
-  // Doesn't need zapLeadingZeros.
-  return result;
-}
-struct BigUnsigned xOrBU(struct BigUnsigned *a, struct BigUnsigned *b) {
-  //DTRT_ALIASED(this == &a || this == &b, bitXor(a, b));
-  struct BigUnsigned result;
-  Index i;
-  struct BigUnsigned *a2, *b2;
-  if (a->len >= b->len) {
-    a2 = a;
-    b2 = b;
-  } else {
-    a2 = b;
-    b2 = a;
-  }
-  allocateBU(&result, a2->len);
-  for (i = 0; i < b2->len; i++)
-    result.blk[i] = a2->blk[i] ^ b2->blk[i];
-  for (; i < a2->len; i++)
-    result.blk[i] = a2->blk[i];
-  result.len = a2->len;
-  zapLeadingZeros(&result);
-  return result;
-}
-struct BigUnsigned shiftBURight(struct BigUnsigned *a, int b);
-struct BigUnsigned shiftBULeft(struct BigUnsigned *a, int b);
-struct BigUnsigned shiftBURight(struct BigUnsigned *a, int b) {
-	//DTRT_ALIASED(this == &a, bitShiftRight(a, b));
-	struct BigUnsigned result=createBU();
-	if (b < 0) {
-		//if (b << 1 == 0)
-			//throw "BigUnsigned::bitShiftRight: "
-			//"Pathological shift amount not implemented";
-			
-		if (!(b << 1 == 0)) {
-			return shiftBULeft(a, -b);
-		}
-	}
-	// This calculation is wacky, but expressing the shift as a left bit shift
-	// within each block lets us use getShiftedBlock.
-	Index rightShiftBlocks = (b + numBUBits - 1) / numBUBits;
-	unsigned int leftShiftBits = numBUBits * rightShiftBlocks - b;
-	// Now (N * rightShiftBlocks - leftShiftBits) == b
-	// and 0 <= leftShiftBits < N.
-	if (rightShiftBlocks >= a->len + 1) {
-		// All of a is guaranteed to be shifted off, even considering the left
-		// bit shift.
-		result.len = 0;
-		return result;
-	}
-	// Now we're allocating a positive amount.
-	// + 1: room for high bits nudged left into another block
-	result.len = a->len + 1 - rightShiftBlocks;
-	allocateBU(&result, result.len);
-	Index i, j;
-	for (j = rightShiftBlocks, i = 0; j <= a->len; j++, i++)
-		result.blk[i] = getShiftedBUBlock(a, j, leftShiftBits);
-	// Zap possible leading zero
-	if (result.blk[result.len - 1] == 0)
-		result.len--;
-	return result;
-}
-struct BigUnsigned shiftBULeft(struct BigUnsigned *a, int b) {
-  //DTRT_ALIASED(this == &a, bitShiftLeft(a, b));
-  struct BigUnsigned result=createBU();
-  if (b < 0) {
-    //if (b << 1 == 0)
-    //  throw "BigUnsigned bitShiftLeft: "
-    //    "Pathological shift amount not implemented";
-	  if (!(b << 1 == 0)) {
-      return shiftBURight(a, -b);
+  int orBU(BigUnsigned *result, BigUnsigned *a, BigUnsigned *b) {
+    if (!result || !a || !b) {
+      return -1;
     }
+    Index i;
+    BigUnsigned *a2, *b2;
+    if (a->len >= b->len) {
+      a2 = a;
+      b2 = b;
+    }
+    else {
+      a2 = b;
+      b2 = a;
+    }
+    for (i = 0; i < b2->len; i++)
+      result->blk[i] = a2->blk[i] | b2->blk[i];
+    for (; i < a2->len; i++)
+      result->blk[i] = a2->blk[i];
+    result->len = a2->len;
+    // Doesn't need zapLeadingZeros.
+    return 0;
   }
-  Index shiftBlocks = b / numBUBits;
-  unsigned int shiftBits = b % numBUBits;
-  // + 1: room for high bits nudged left into another block
-  result.len = a->len + shiftBlocks + 1;
-  allocateBU(&result, result.len);
-  Index i, j;
-  for (i = 0; i < shiftBlocks; i++)
-    result.blk[i] = 0;
-  for (j = 0, i = shiftBlocks; j <= a->len; j++, i++)
-    result.blk[i] = getShiftedBUBlock(a, j, shiftBits);
-  // Zap possible leading zero
-  if (result.blk[result.len - 1] == 0)
-    result.len--;
-  return result;
-}
+  int xOrBU(BigUnsigned *result, BigUnsigned *a, BigUnsigned *b) {
+    if (!result || !a || !b) {
+      return -1;
+    }
+    Index i;
+    BigUnsigned *a2, *b2;
+    if (a->len >= b->len) {
+      a2 = a;
+      b2 = b;
+    }
+    else {
+      a2 = b;
+      b2 = a;
+    }
+    for (i = 0; i < b2->len; i++)
+      result->blk[i] = a2->blk[i] ^ b2->blk[i];
+    for (; i < a2->len; i++)
+      result->blk[i] = a2->blk[i];
+    result->len = a2->len;
+    zapLeadingZeros(result);
+    return 0;
+  }
+  int shiftBURight(BigUnsigned *result, BigUnsigned *a, int b);
+  int shiftBULeft(BigUnsigned *result, BigUnsigned *a, int b);
+  int shiftBURight(BigUnsigned *result, BigUnsigned *a, int b) {
+    if (!result || !a || !b)
+      return -1;
+    initBU(result);
+    if (b < 0) {
+      //if (b << 1 == 0)
+      //throw "BigUnsigned::bitShiftRight: "
+      //"Pathological shift amount not implemented";
+
+      if (!(b << 1 == 0)) {
+        return shiftBULeft(result, a, -b);
+      }
+    }
+    // This calculation is wacky, but expressing the shift as a left bit shift
+    // within each block lets us use getShiftedBlock.
+    Index rightShiftBlocks = (b + numBUBits - 1) / numBUBits;
+    unsigned int leftShiftBits = numBUBits * rightShiftBlocks - b;
+    // Now (N * rightShiftBlocks - leftShiftBits) == b
+    // and 0 <= leftShiftBits < N.
+    if (rightShiftBlocks >= a->len + 1) {
+      // All of a is guaranteed to be shifted off, even considering the left
+      // bit shift.
+      result->len = 0;
+      return 0;
+    }
+    // Now we're allocating a positive amount.
+    // + 1: room for high bits nudged left into another block
+    result->len = a->len + 1 - rightShiftBlocks;
+    Index i, j;
+    for (j = rightShiftBlocks, i = 0; j <= a->len; j++, i++)
+      result->blk[i] = getShiftedBUBlock(a, j, leftShiftBits);
+    // Zap possible leading zero
+    if (result->blk[result->len - 1] == 0)
+      result->len--;
+    return 0;
+  }
+  int shiftBULeft(BigUnsigned *result, BigUnsigned *a, int b) {
+    initBU(result);
+    if (b < 0) {
+      //if (b << 1 == 0)
+      //  throw "BigUnsigned bitShiftLeft: "
+      //    "Pathological shift amount not implemented";
+      if (!(b << 1 == 0)) {
+        return shiftBURight(result, a, -b);
+      }
+    }
+    Index shiftBlocks = b / numBUBits;
+    unsigned int shiftBits = b % numBUBits;
+    // + 1: room for high bits nudged left into another block
+    result->len = a->len + shiftBlocks + 1;
+    Index i, j;
+    for (i = 0; i < shiftBlocks; i++)
+      result->blk[i] = 0;
+    for (j = 0, i = shiftBlocks; j <= a->len; j++, i++)
+      result->blk[i] = getShiftedBUBlock(a, j, shiftBits);
+    // Zap possible leading zero
+    if (result->blk[result->len - 1] == 0)
+      result->len--;
+    return result;
+  }
 
 #endif
