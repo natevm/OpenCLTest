@@ -31,7 +31,7 @@ int main()
 	// Initialize OpenCL
   int numBits = 22;
   long numElements = 1 << numBits;
-  CLWrapper CL(numElements, 256);
+  CLWrapper CL(numElements, 1024);
 
   //Generate big unsigned numbers.
 	input.resize(numElements);
@@ -46,12 +46,11 @@ int main()
 
   //Sort them.
 	CL.RadixSort(input, 32);
-
   //Print them.
   cout << "Sorted" << endl;
-  for (int i = 0; i < numElements; ++i){
-    cout<<buToString(input[i])<<endl;
-  }
+  //for (int i = 0; i < numElements; ++i){
+    //cout<<buToString(input[i])<<endl;
+  //}
   cout << "Finished!" << endl;
-  getchar();
+ // getchar();
 }

@@ -15,24 +15,36 @@ void CLWrapper::RadixSort(std::vector<BigUnsigned> &input, const Index numBits) 
 
 //--PRIVATE--//
 void CLWrapper::initRadixSortBuffers(std::vector<BigUnsigned> &input){
-  //Input: 0. LPBuffer: 1. RPBuffer: 2. LABuffer: 3. RABuffer: 4. Result: 5.
+  //Input: 0. LPBuffer: 1. RPBuffer: 2. LABuffer: 3. RABuffer: 4. Result: 5. Intermediate. 6. ICopy. 7
   cl_int error = CL_SUCCESS;
   std::vector<Index> zeroVector(globalSize);
   std::vector<BigUnsigned> result(globalSize);
+
   buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, sizeof (BigUnsigned)* (globalSize), input.data(), &error));
   buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (Index)* (globalSize), zeroVector.data(), &error));
   buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (Index)* (globalSize), zeroVector.data(), &error));
   buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (Index)* (globalSize), zeroVector.data(), &error));
   buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (Index)* (globalSize), zeroVector.data(), &error));
   buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (BigUnsigned)* (globalSize), result.data(), &error));
+
+  zeroVector.resize(globalSize / localSize);
+  buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_int)*(globalSize / localSize), zeroVector.data(), &error));
+  buffers.push_back(clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_int)*(globalSize / localSize), zeroVector.data(), &error));
+
+  std::vector<cl_int> iValues(globalSize / localSize, -1);
+  clEnqueueWriteBuffer(queue, buffers[6], 1, 0, sizeof(cl_int)*(globalSize / localSize), iValues.data(), 0, nullptr, nullptr);
+
   if (error != CL_SUCCESS) {
     std::cerr << "CLWrapper: Initializing radix sort buffers - OpenCL call failed with error " << error << std::endl;
     std::getchar();
     std::exit;
   }
 }
+#include <chrono>
 void CLWrapper::envokeRadixSortRoutine(const Index numBits){
-  //Input: 0. LPBuffer: 1. RPBuffer: 2. LABuffer: 3. RABuffer: 4. Result: 5.
+  auto begin = std::chrono::high_resolution_clock::now();
+
+  //Input: 0. LPBuffer: 1. RPBuffer: 2. LABuffer: 3. RABuffer: 4. Result: 5. Intermediate. 6. ICopy. 7
   //Using default workgroup size.
   const size_t globalWorkSize[] = { globalSize, 0, 0 };
   const size_t localWorkSize[] = { localSize, 0, 0 };
@@ -47,8 +59,8 @@ void CLWrapper::envokeRadixSortRoutine(const Index numBits){
     kernelBox->predicate(buffers[0], buffers[2], index, 1, globalSize, localSize);
 
     //Scan the predication buffers.
-    kernelBox->streamScan(buffers[1], intermediateBuffer, buffers[3], globalSize, localSize);
-    kernelBox->streamScan(buffers[2], intermediateBuffer, buffers[4], globalSize, localSize);
+    kernelBox->streamScan(buffers[1], buffers[6], buffers[7], buffers[3], globalSize, localSize);
+    kernelBox->streamScan(buffers[2], buffers[6], buffers[7], buffers[4], globalSize, localSize);
     
     //Compacting
     kernelBox->doubleCompact(buffers[0], buffers[5], buffers[1], buffers[3], buffers[4], globalSize, localSize);
@@ -58,6 +70,10 @@ void CLWrapper::envokeRadixSortRoutine(const Index numBits){
     buffers[0] = buffers[5];
     buffers[5] = temp;
   }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  //getchar();
+
 }
 
 
